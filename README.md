@@ -1,0 +1,1 @@
+# Safecast QGIS Plugin (dev)
