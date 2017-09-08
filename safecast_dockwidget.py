@@ -35,6 +35,13 @@ from qgis.utils import iface
 
 from .reader import SafecastReader, SafecastReaderError, SafecastReaderLogger
 from .safecast_layer import SafecastLayer, SafecastWriterError
+try:
+    from .safecast_plot import SafecastPlot
+    plotMsg = None
+except ImportError as e:
+    plotMsg = "Plot functionality not available. Reason: {}".format(e)
+    iface.messageBar().pushMessage("Safecast plugin", plotMsg,
+                                   level=QgsMessageBar.WARNING, duration=10)
 
 # register logger handler
 hdlr = logging.StreamHandler()
@@ -65,8 +72,17 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         # connect ui with functions
         self._createToolbarAndConnect()
 
+        # generic connects
+        iface.legendInterface().currentLayerChanged.connect(self.updateStatsPlot)
+
         # load internal styles
         self._initStyles()
+
+        # initialize statistics
+        self._initStats()
+        
+        # initialize plot
+        self._initPlot()
 
         # list of layers (must be defined, otherwise SafecastLayer is
         # not returned by getActiveLayer()
@@ -107,6 +123,8 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                      SIGNAL("triggered()"), self.onDelete)
         self.connect(self.styleButton,
                      SIGNAL("clicked()"), self.onStyle)
+        self.connect(self.plotStyleCombo,
+                     SIGNAL("currentIndexChanged(int)"), self.onPlotStyle)
 
     def _initStyles(self):
         """Define internal styles and polulates items in combobox."""
@@ -118,6 +136,111 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         for item in self._styles:
             self.styleBox.addItem(item['name'])
         self.styleBox.setCurrentIndex(0)
+
+    def _initStats(self, statsWidget=False):
+        """Initialize statistics tab.
+
+        :param statsWidget: True to create plot widget otherwise info
+        QLabel is displayed
+        """
+        # use grid layout
+        if not hasattr(self, "_statsLayout"):
+            self._statsLayout = QGridLayout(self.groupStats)
+
+        if not hasattr(self, "_statsWidget"):
+            self._statsWidget = QTableWidget(self.groupStats)
+            self._statsWidget.setShowGrid(False)
+            self._statsWidget.horizontalHeader().setStretchLastSection(True)
+            self._statsWidget.horizontalHeader().hide()
+            self._statsWidget.verticalHeader().hide()
+            self._statsWidget.setColumnCount(2)
+            self._statsWidget.setVisible(False)
+
+        if not hasattr(self, "_statsLabel"):
+            self._statsLabel = QLabel(
+                self.tr("Load or select Safecast layer in order to display ader statistics."),
+                self.groupStats
+            )
+            self._statsSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+            self._statsLayout.addWidget(self._statsLabel)
+            self._statsLayout.addItem(self._statsSpacer)
+            self._statsVisible = False
+            return # initialization done
+
+        if statsWidget and not self._statsVisible:
+            # remove info label & spacer from layout
+            self._statsLabel.setVisible(False)
+            self._statsLayout.removeWidget(self._statsLabel)
+            self._statsLayout.removeItem(self._statsSpacer)
+            # add stats widget into layout
+            self._statsWidget.setVisible(True)
+            self._statsLayout.addWidget(self._statsWidget)
+            self._statsVisible = True
+
+            self.groupStats.adjustSize()
+
+        elif not statsWidget and self._statsVisible:
+            # remove plot widget from layout
+            self._statsWidget.setVisible(False)
+            self._plotLayout.removeWidget(self._statsWidget)
+            self._statsVisible = False
+            # add info label & spacer into layout
+            self._statsLabel.setVisible(True)
+            self._statsLayout.addWidget(self._statsLabel)
+            self._statsLayout.addItem(self._statsSpacer)
+            # set group tile
+            self.groupStats.setTitle(self.tr("Statistics"))
+        
+    def _initPlot(self, plotWidget=False):
+        """Initialize plot tab.
+
+        :param plotWidget: True to create plot widget otherwise info
+        QLabel is displayed
+        """
+        # use grid layout if not defined
+        if not hasattr(self, "_plotLayout"):
+            self._plotLayout = QGridLayout(self.groupPlot)
+
+        # create new plot widget
+        if not hasattr(self, "_plotWidget") and not plotMsg:
+            self._plotWidget = SafecastPlot(self.groupPlot)
+            self._plotWidget.setVisible(False)
+
+        if not hasattr(self, "_plotLabel"):
+            self._plotLabel = QLabel(
+                self.tr("Load or select Safecast layer in order to display ader plot.")
+                if not plotMsg else plotMsg, self.groupPlot)
+            self._plotSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+
+            self._plotLayout.addWidget(self._plotLabel)
+            self._plotLayout.addItem(self._plotSpacer)
+            self._plotVisible = False
+            return # initialization done
+        
+        if plotWidget and not self._plotVisible:
+            # remove info label & spacer from layout
+            self._plotLabel.setVisible(False)
+            self._plotLayout.removeWidget(self._plotLabel)
+            self._plotLayout.removeItem(self._plotSpacer)
+            # add plot widget into layout
+            self._plotWidget.setVisible(True)
+            self._plotLayout.addWidget(self._plotWidget)
+            self._plotVisible = True
+
+            self.groupPlot.adjustSize()
+
+        elif not plotWidget and self._plotVisible:
+            # remove plot widget from layout
+            self._plotWidget.setVisible(False)
+            self._plotLayout.removeWidget(self._plotLabel)
+            self._plotVisible = False
+            # add info label & spacer into layout
+            self._plotLabel.setVisible(True)
+            self._plotLayout.addWidget(self._plotLabel)
+            self._plotLayout.addItem(self._plotSpacer)
+            # set group tile
+            self.groupPlot.setTitle(self.tr("Plot"))
 
     def stylePath(self):
         """Get style path (when local QML files are located).
@@ -200,6 +323,16 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         # remember directory path
         self._settings.setValue(sender, os.path.dirname(filePath))
+
+    def onPlotStyle(self):
+        """Plot style changed.
+        """
+        layer = self.getActiveLayer()
+        if not layer:
+            # no layer is currently selected, nothing to do
+            return
+
+        self.updatePlot(layer)
 
     def onStyle(self):
         """Apply new style for currently selected layer.
@@ -346,3 +479,55 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             return None
 
         return layer
+
+    def updateStats(self, layer):
+        """Update statistics for currently selected safecast layer.
+
+        :param layer: current layer
+        """
+        safecast_layer = layer and isinstance(layer, SafecastLayer)
+
+        # attach stats widget if doesn't exist
+        self._initStats(safecast_layer)
+
+        if not safecast_layer:
+            return
+
+        stats = layer.stats()
+        data = [(self.tr("Measured points"), "{0:d}".format(stats['count'])),
+                (self.tr("ADER Min (microSv/h)"),   "{0:.2f}".format(stats['min'])),
+                (self.tr("ADER Max (microSv/h)"),   "{0:.2f}".format(stats['max'])),
+                (self.tr("ADER Sum (microSv/h)"),   "{0:.2f}".format(stats['sum'])),
+                (self.tr("ADER Mean (microSv/h)"),  "{0:.2f}".format(stats['mean']))]
+
+        self.groupStats.setTitle(self.tr("Layer statistics - {}").format(layer.name()))
+        self._statsWidget.setRowCount(len(data))
+        row = 0
+        for items in data:
+            self._statsWidget.setItem(row, 0, QtGui.QTableWidgetItem("{}:".format(items[0])))
+            self._statsWidget.setItem(row, 1, QtGui.QTableWidgetItem(items[1]))
+            row += 1
+        self._statsWidget.resizeColumnsToContents()
+
+    def updatePlot(self, layer):
+        """Update plot for currently selected safecast layer.
+
+        :param layer: current layer
+        """
+        # attach plot widget if doesn't exist
+        self._initPlot(layer and isinstance(layer, SafecastLayer) and not plotMsg)
+
+        # update plot curve
+        if self._plotVisible:
+            groupTitle = self.tr("Layer plot - {}").format(layer.name())
+            plotStyle = self.plotStyleCombo.currentIndex()
+            self._plotWidget.update(layer, plotStyle)
+        else:
+            groupTitle = self.tr("Plot")
+        self.groupPlot.setTitle(groupTitle)
+            
+    def updateStatsPlot(self, layer):
+        """Update stats & plot for currently selected safecast layer.
+        """
+        self.updateStats(layer)
+        self.updatePlot(layer)

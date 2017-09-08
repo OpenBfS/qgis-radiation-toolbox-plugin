@@ -46,6 +46,16 @@ class SafecastLayer(QgsVectorLayer):
         """
         self._fileName = fileName
 
+        # ader statistics
+        self._stats = { 'min': None,
+                        'max': None,
+                        'count': 0,
+                        'sum': 0,
+                        'mean': None }
+
+        # ader plot
+        self._plot = []
+        
         # create point layer (WGS-84, EPSG:4326)
         super(SafecastLayer, self).__init__('Point?crs=epsg:4326',
                                             os.path.splitext(os.path.basename(self._fileName))[0],
@@ -211,6 +221,8 @@ class SafecastLayer(QgsVectorLayer):
         except ValueError:
             ader = -1
         row.insert(0, ader)
+        # update statistics
+        self._update_stats(ader)
 
         # compute local time (from datetime)
         try:
@@ -219,6 +231,9 @@ class SafecastLayer(QgsVectorLayer):
             time_local = self.tr("unknown")
         row.insert(1, time_local)
 
+        # update plot data
+        self._plot.append((time_local, ader))
+        
         # create new feature
         fet = QgsFeature()
         # set coordinates
@@ -257,3 +272,33 @@ class SafecastLayer(QgsVectorLayer):
         :return: path as a string
         """
         return os.path.dirname(self._fileName)
+
+    def _update_stats(self, value):
+        """Update ader statistics.
+
+        :param ader: ader statistics
+        """
+        if self._stats['min'] is None or self._stats['min'] > value:
+            self._stats['min'] = value
+        if self._stats['max'] is None or self._stats['max'] < value:
+            self._stats['max'] = value
+        self._stats['sum'] += value
+        self._stats['count'] += 1
+        self._stats['mean'] = self._stats['sum'] / self._stats['count']
+
+    def stats(self):
+        """Get layer statistics"""
+        return self._stats
+
+    def plot_data(self):
+        def time2float(value):
+            h, m, s = map(float, value.split(':'))
+            return h + m / 60. + s / 3600.
+
+        x = []
+        y = []
+        for time_local, ader in self._plot:
+            x.append(time2float(time_local))
+            y.append(ader)
+
+        return x, y
