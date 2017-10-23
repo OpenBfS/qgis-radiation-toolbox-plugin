@@ -339,16 +339,17 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
     def onPlotStyle(self, idx):
         """Plot style changed.
         """
+        # remember style
+        sender = 'safecast-{}-lastCurrentIndex'.format(self.sender().objectName())
+        self._settings.setValue(sender, idx)
+
         layer = self.getActiveLayer()
         if not layer:
             # no layer is currently selected, nothing to do
             return
 
+        # re-render plot
         self.updatePlot(layer)
-
-        # remember style
-        sender = 'safecast-{}-lastCurrentIndex'.format(self.sender().objectName())
-        self._settings.setValue(sender, idx)
 
     def onStyle(self):
         """Apply new style for currently selected layer.
