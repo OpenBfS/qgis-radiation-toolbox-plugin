@@ -5,7 +5,7 @@
                              ----------------------
         begin                : 2016-05-25
         git sha              : $Format:%H$
-        copyright            : (C) 2016 by OpenGeoLabs s.r.o.
+        copyright            : (C) 2016-2017 by OpenGeoLabs s.r.o.
         acknowledgement      : Suro, Czech Republic
         email                : martin.landa@opengeolabs.cz
  ***************************************************************************/
@@ -90,7 +90,8 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         # settings
         self._settings = QSettings()
-        
+        self._loadSettings()
+
     def _createToolbarAndConnect(self):
         """Create toolbar and connect tools."""
         self.signalMapper = QSignalMapper(self)
@@ -125,6 +126,17 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                      SIGNAL("clicked()"), self.onStyle)
         self.connect(self.plotStyleCombo,
                      SIGNAL("currentIndexChanged(int)"), self.onPlotStyle)
+        self.connect(self.storageCombo,
+                     SIGNAL("currentIndexChanged(int)"), self.onStorageFormat)
+
+    def _loadSettings(self):
+        """Load settings."""
+        # storage format
+        sender = 'safecast-{}-lastCurrentIndex'.format(self.storageCombo.objectName())
+        self.storageCombo.setCurrentIndex(int(self._settings.value(sender, 0)))
+        # plot style
+        sender = 'safecast-{}-lastCurrentIndex'.format(self.plotStyleCombo.objectName())
+        self.plotStyleCombo.setCurrentIndex(int(self._settings.value(sender, 0)))
 
     def _initStyles(self):
         """Define internal styles and polulates items in combobox."""
@@ -273,7 +285,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         """
         # get last used directory path from settings
-        sender = '{}-lastUserFilePath'.format(self.sender().objectName())
+        sender = 'safecast-{}-lastUserFilePath'.format(self.sender().objectName())
         lastPath = self._settings.value(sender, '')
 
         filePath = QFileDialog.getOpenFileName(self, self.tr("Load Safecast LOG file"),
@@ -324,7 +336,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         # remember directory path
         self._settings.setValue(sender, os.path.dirname(filePath))
 
-    def onPlotStyle(self):
+    def onPlotStyle(self, idx):
         """Plot style changed.
         """
         layer = self.getActiveLayer()
@@ -333,6 +345,10 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             return
 
         self.updatePlot(layer)
+
+        # remember style
+        sender = 'safecast-{}-lastCurrentIndex'.format(self.sender().objectName())
+        self._settings.setValue(sender, idx)
 
     def onStyle(self):
         """Apply new style for currently selected layer.
@@ -464,6 +480,13 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             self.actionDeselect.setEnabled(False)
             self.actionDelete.setEnabled(False)
             
+    def onStorageFormat(self, idx):
+        """Storage format changed.
+        """
+        # remember current storage format
+        sender = 'safecast-{}-lastCurrentIndex'.format(self.sender().objectName())
+        self._settings.setValue(sender, idx)
+
     def getActiveLayer(self):
         """Get currently selected (active) layer.
 
