@@ -92,14 +92,19 @@ class SafecastLayer(QgsVectorLayer):
             fileName = "{}|layername={}|geometrytype=Point".format(
                 filePath, layerName
             )
+
+            # rewrite output DB if exists
             if os.path.exists(filePath):
                 os.remove(filePath)
+
+            # new DB with empty layer must be created before reading
+            # layer
             driver = ogr.GetDriverByName("SQLite")
             dataSource = driver.CreateDataSource(filePath)
             srs = osr.SpatialReference()
             srs.ImportFromEPSG(4326)
             layer = dataSource.CreateLayer(str(layerName), srs, ogr.wkbPoint)
-            dataSource = None
+            dataSource = None # write changes
         else:
             fileName = 'Point?crs=epsg:4326'
         super(SafecastLayer, self).__init__(fileName, layerName, self._storageFormat)
