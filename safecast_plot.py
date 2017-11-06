@@ -41,10 +41,14 @@ class SafecastAxis(Qwt.QwtPlotItem):
         """
         Qwt.QwtPlotItem.__init__(self)
         self.__axis = masterAxis
-        if masterAxis in (Qwt.QwtPlot.yLeft, Qwt.QwtPlot.yRight):
-            self.setAxes(slaveAxis, masterAxis)
+        if hasQwt5:
+            fn = self.setAxis
         else:
-            self.setAxes(masterAxis, slaveAxis)
+            fn = self.setAxes
+        if masterAxis in (Qwt.QwtPlot.yLeft, Qwt.QwtPlot.yRight):
+            fn(slaveAxis, masterAxis)
+        else:
+            fn(masterAxis, slaveAxis)
         self.scaleDraw = Qwt.QwtScaleDraw()
         self.scaleDraw.setAlignment((Qwt.QwtScaleDraw.LeftScale,
                                      Qwt.QwtScaleDraw.RightScale,
