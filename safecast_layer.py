@@ -27,7 +27,9 @@ from dateutil import tz
 from PyQt4.QtCore import QVariant
 from PyQt4.QtGui import QProgressBar
 
-from qgis.core import QgsVectorLayer, QgsField, QgsFeature, QgsGeometry, QgsPoint
+from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
+    QgsGeometry, QgsPoint, QgsVectorFileWriter, QgsFields, \
+    QgsWKBTypes, QgsCoordinateReferenceSystem, QGis
 from qgis.utils import iface
 from qgis.gui import QgsMessageBar
 
@@ -39,12 +41,14 @@ class SafecastWriterError(Exception):
     pass
 
 class SafecastLayer(QgsVectorLayer):
-    def __init__(self, fileName):
+    def __init__(self, fileName, storageFormat):
         """Safecast memory-based read-only layer.
 
         :param fileName: path to input file
+        :param storageFormat: storage format for layer (Memory or SQLite)
         """
         self._fileName = fileName
+        self._storageFormat = storageFormat
 
         # ader statistics
         self._stats = { 'min': None,
@@ -55,41 +59,59 @@ class SafecastLayer(QgsVectorLayer):
 
         # ader plot
         self._plot = []
-        
-        # create point layer (WGS-84, EPSG:4326)
-        super(SafecastLayer, self).__init__('Point?crs=epsg:4326',
-                                            os.path.splitext(os.path.basename(self._fileName))[0],
-                                            'memory')
 
-        # define list of attributes
-        self._provider = self.dataProvider()
-        attrbs = [QgsField("ader_microsvh", QVariant.Double),
-                  QgsField("time_local", QVariant.String),
-                  QgsField("device", QVariant.String),
-                  QgsField("device_id",  QVariant.Int),
-                  QgsField("date_time", QVariant.String),
-                  QgsField("cpm", QVariant.Int),
-                  QgsField("pulses5s", QVariant.Int),
-                  QgsField("pulses_total", QVariant.Int),
-                  QgsField("validity", QVariant.String),
-                  QgsField("lat_deg", QVariant.String),
-                  QgsField("hemisphere", QVariant.String),
-                  QgsField("long_deg", QVariant.String),
-                  QgsField("east_west", QVariant.String),
-                  QgsField("altitude", QVariant.Double),
-                  QgsField("gps_validity", QVariant.String),
-                  QgsField("sat", QVariant.Int),
-                  QgsField("hdop", QVariant.Int),
-                  QgsField("checksum", QVariant.String)
+        # define attributes
+        attrbs = [
+            QgsField("ader_microsvh", QVariant.Double),
+            QgsField("time_local", QVariant.String),
+            QgsField("device", QVariant.String),
+            QgsField("device_id",  QVariant.Int),
+            QgsField("date_time", QVariant.String),
+            QgsField("cpm", QVariant.Int),
+            QgsField("pulses5s", QVariant.Int),
+            QgsField("pulses_total", QVariant.Int),
+            QgsField("validity", QVariant.String),
+            QgsField("lat_deg", QVariant.String),
+            QgsField("hemisphere", QVariant.String),
+            QgsField("long_deg", QVariant.String),
+            QgsField("east_west", QVariant.String),
+            QgsField("altitude", QVariant.Double),
+            QgsField("gps_validity", QVariant.String),
+            QgsField("sat", QVariant.Int),
+            QgsField("hdop", QVariant.Int),
+            QgsField("checksum", QVariant.String)
         ]
+        # four columns (fid, ader_microSvh, time_local, hdop, checksum) are computed
+        self._validNumAttrbs = len(attrbs) - 3
+
+        # create point layer (WGS-84, EPSG:4326)
+        layerName = os.path.splitext(os.path.basename(self._fileName))[0]
+        if self._storageFormat == "ogr":
+            from osgeo import ogr, osr
+            filePath = os.path.splitext(self._fileName)[0] + '.sqlite'
+            fileName = "{}|layername={}|geometrytype=Point".format(
+                filePath, layerName
+            )
+            if os.path.exists(filePath):
+                os.remove(filePath)
+            driver = ogr.GetDriverByName("SQLite")
+            dataSource = driver.CreateDataSource(filePath)
+            srs = osr.SpatialReference()
+            srs.ImportFromEPSG(4326)
+            layer = dataSource.CreateLayer(str(layerName), srs, ogr.wkbPoint)
+            dataSource = None
+        else:
+            fileName = 'Point?crs=epsg:4326'
+        super(SafecastLayer, self).__init__(fileName, layerName, self._storageFormat)
+
+        self._provider = self.dataProvider()
 
         # set aliases when running QGIS 2.18+
-        if hasattr(attrbs[0], "setAlias"):
+        if False and hasattr(attrbs[0], "setAlias"):
             self._setAliases(attrbs)
 
         # set attributes
         self._provider.addAttributes(attrbs)
-
         self.updateFields()
 
         # open layer in read-only mode
@@ -103,24 +125,25 @@ class SafecastLayer(QgsVectorLayer):
 
         :params attrbs: list of QgsField instances
         """
-        alias = [self.tr("ADER microSv/h"),
-                 self.tr("Local time"),
-                 self.tr("Device"),
-                 self.tr("Device ID"),
-                 self.tr("Datetime"),
-                 self.tr("CPM"),
-                 self.tr("Pulses 5sec"),
-                 self.tr("Pulses total"),
-                 self.tr("Validity"),
-                 self.tr("Latitude (deg)"),
-                 self.tr("Hemisphere"),
-                 self.tr("Longitude (deg)"),
-                 self.tr("East/West"),
-                 self.tr("Altitude"),
-                 self.tr("GPS Validity"),
-                 self.tr("Sat"),
-                 self.tr("HDOP"),
-                 self.tr("CheckSum")
+        alias = [
+            self.tr("ADER microSv/h"),
+            self.tr("Local time"),
+            self.tr("Device"),
+            self.tr("Device ID"),
+            self.tr("Datetime"),
+            self.tr("CPM"),
+            self.tr("Pulses 5sec"),
+            self.tr("Pulses total"),
+            self.tr("Validity"),
+            self.tr("Latitude (deg)"),
+            self.tr("Hemisphere"),
+            self.tr("Longitude (deg)"),
+            self.tr("East/West"),
+            self.tr("Altitude"),
+            self.tr("GPS Validity"),
+            self.tr("Sat"),
+            self.tr("HDOP"),
+            self.tr("CheckSum")
         ]
         i = 0
         for field in attrbs:
@@ -154,12 +177,20 @@ class SafecastLayer(QgsVectorLayer):
         i = 0
         count = reader.count()
         start = time.clock()
+        feats = []
         for f in reader:
-            self._process_row(f) # add features to the map layer
             i += 1
+
+            feat = self._process_row(f, i) # process feature
+            feats.append(feat)
+
             if i % 100 == 0:
                 percent = i / float(count) * 100
                 progress.setValue(percent)
+
+        # add features
+        self._provider.addFeatures(feats)
+
         endtime = time.clock() - start
         progress.setValue(100)
         iface.messageBar().clearWidgets()
@@ -168,13 +199,15 @@ class SafecastLayer(QgsVectorLayer):
         iface.messageBar().pushMessage(self.tr("Info"),
                                        self.tr("{} features loaded (in {:.2f} sec).").format(count, endtime),
                                        level=QgsMessageBar.INFO, duration=3)
+
         # data loaded (avoid multiple imports)
         self._loaded = True
         
-    def _process_row(self, row):
+    def _process_row(self, row, rowid):
         """Process line in LOG file and create a new point feature based on this line.
 
         :param row: row to be processed
+        :param rowid: force feature id
         """
         # define internal functions first
         def coords_float(coord, ne):
@@ -207,8 +240,7 @@ class SafecastLayer(QgsVectorLayer):
 
             return local.strftime('%H:%M:%S')
 
-        if len(row) != len(self._provider.fields()) - 3:
-            # last four columns (ader_microSvh, time_local, hdop, checksum) are computed
+        if len(row) != self._validNumAttrbs:
             raise SafecastReaderError(self.tr("Failed to read input data. Line: {}").format(','.join(row)))
 
         # force to split last item (hdop & checksum)
@@ -240,10 +272,15 @@ class SafecastLayer(QgsVectorLayer):
         y = coords_float(row[9], row[10])
         x = coords_float(row[11], row[12])
         fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
+
+        if self._storageFormat == "ogr":
+            # force feature id (fix SQLite issue)
+            row.insert(0, rowid)
+
         # set attributes
         fet.setAttributes(row)
-        # add new feature into layer
-        self._provider.addFeatures([fet])
+
+        return fet
 
     def save(self, filePath):
         """Save layer to a new LOG file.

@@ -294,12 +294,15 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             # action canceled
             return
 
+        # storage format
+        storageFormat = 'memory' if self.storageCombo.currentIndex() == 0 else 'ogr'
+
         filePath = os.path.normpath(filePath)
         try:
             # create reader for input data
             reader = SafecastReader(filePath)
             # create new QGIS map layer (read-only)
-            layer = SafecastLayer(filePath)
+            layer = SafecastLayer(filePath, storageFormat)
             # load data by reader into new layer and set style
             layer.load(reader)
             layer.loadNamedStyle(self.stylePath())
