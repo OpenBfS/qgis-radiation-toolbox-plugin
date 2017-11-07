@@ -29,11 +29,18 @@ from PyQt4.QtGui import QProgressBar
 
 from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
     QgsGeometry, QgsPoint, QgsVectorFileWriter, QgsFields, \
-    QgsWKBTypes, QgsCoordinateReferenceSystem, QGis
-from qgis.utils import iface
+    QgsCoordinateReferenceSystem
+from qgis.utils import iface, QGis
 from qgis.gui import QgsMessageBar
 
 from .reader import SafecastReaderError
+
+def check_version_2_18():
+    version = map(int, QGis.QGIS_VERSION.split('.'))
+    if version[0] >= 2 and version[1] >= 18:
+        return True
+
+    return False
 
 class SafecastWriterError(Exception):
     """Safecast writer error class.
@@ -112,7 +119,7 @@ class SafecastLayer(QgsVectorLayer):
         self._provider = self.dataProvider()
 
         # set aliases when running QGIS 2.18+
-        if False and hasattr(attrbs[0], "setAlias"):
+        if check_version_2_18():
             self._setAliases(attrbs)
 
         # set attributes
@@ -282,7 +289,7 @@ class SafecastLayer(QgsVectorLayer):
         x = coords_float(row[11], row[12])
         fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
 
-        if False and self._storageFormat == "ogr":
+        if check_version_2_18() and self._storageFormat == "ogr":
             # force feature id (fix SQLite issue)
             row.insert(0, rowid)
 
