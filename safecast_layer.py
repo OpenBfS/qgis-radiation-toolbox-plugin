@@ -119,9 +119,6 @@ class SafecastLayer(QgsVectorLayer):
         self._provider.addAttributes(attrbs)
         self.updateFields()
 
-        # open layer in read-only mode
-        self.setReadOnly(True)
-
         # layer is empty, no data loaded
         self._loaded = False
 
@@ -182,32 +179,39 @@ class SafecastLayer(QgsVectorLayer):
         i = 0
         count = reader.count()
         start = time.clock()
-        feats = []
+        # feats = []
+
+        self.startEditing()
         for f in reader:
             i += 1
 
             feat = self._process_row(f, i) # process feature
-            feats.append(feat)
+            feat.setFeatureId(i)
+            self.addFeature(feat)
+            # feats.append(feat)
 
             if i % 100 == 0:
                 percent = i / float(count) * 100
                 progress.setValue(percent)
 
         # add features
-        self._provider.addFeatures(feats)
+        self.commitChanges()
+        # self._provider.addFeatures(feats)
 
         endtime = time.clock() - start
         progress.setValue(100)
         iface.messageBar().clearWidgets()
 
-        # inform user about successfull import
+        # inform user about successful import
         iface.messageBar().pushMessage(self.tr("Info"),
                                        self.tr("{} features loaded (in {:.2f} sec).").format(count, endtime),
                                        level=QgsMessageBar.INFO, duration=3)
 
         # data loaded (avoid multiple imports)
         self._loaded = True
-        
+        # switch to read-only mode
+        self.setReadOnly(True)
+
     def _process_row(self, row, rowid):
         """Process line in LOG file and create a new point feature based on this line.
 
@@ -278,7 +282,7 @@ class SafecastLayer(QgsVectorLayer):
         x = coords_float(row[11], row[12])
         fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
 
-        if self._storageFormat == "ogr":
+        if False and self._storageFormat == "ogr":
             # force feature id (fix SQLite issue)
             row.insert(0, rowid)
 
