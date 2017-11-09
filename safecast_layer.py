@@ -29,7 +29,7 @@ from PyQt4.QtGui import QProgressBar
 
 from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
     QgsGeometry, QgsPoint, QgsVectorFileWriter, QgsFields, \
-    QgsCoordinateReferenceSystem
+    QgsCoordinateReferenceSystem, QgsMessageLog
 from qgis.utils import iface, QGis
 from qgis.gui import QgsMessageBar
 
@@ -66,6 +66,9 @@ class SafecastLayer(QgsVectorLayer):
 
         # ader plot
         self._plot = []
+
+        # import errors
+        self._errs = {}
 
         # define attributes
         attrbs = [
@@ -193,9 +196,10 @@ class SafecastLayer(QgsVectorLayer):
             i += 1
 
             feat = self._process_row(f, i) # process feature
-            feat.setFeatureId(i)
-            self.addFeature(feat)
-            # feats.append(feat)
+            if feat:
+                feat.setFeatureId(i)
+                self.addFeature(feat)
+                # feats.append(feat)
 
             if i % 100 == 0:
                 percent = i / float(count) * 100
@@ -210,9 +214,31 @@ class SafecastLayer(QgsVectorLayer):
         iface.messageBar().clearWidgets()
 
         # inform user about successful import
-        iface.messageBar().pushMessage(self.tr("Info"),
-                                       self.tr("{} features loaded (in {:.2f} sec).").format(count, endtime),
-                                       level=QgsMessageBar.INFO, duration=3)
+        iface.messageBar().pushMessage(
+            self.tr("Info"),
+            self.tr("{} features loaded (in {:.2f} sec).").format(self._stats['count'], endtime),
+            level=QgsMessageBar.INFO,
+            duration=3
+        )
+
+        if self._errs:
+            # report errors if any
+            iface.messageBar().pushMessage(
+                self.tr("Warning"),
+                self.tr("{} invalid measurement(s) skipped (see message log for details)").format(
+                    sum(self._errs.values())
+                ),
+                level=QgsMessageBar.WARNING,
+                duration=5
+            )
+
+            for attr in self._errs.keys():
+                QgsMessageLog.logMessage(
+                    "{}: {} measurement(s) skipped (invalid HDOP)".format(
+                        self._fileName, self._errs[attr]
+                    ),
+                    level=QgsMessageLog.WARNING
+                )
 
         # data loaded (avoid multiple imports)
         self._loaded = True
@@ -262,6 +288,15 @@ class SafecastLayer(QgsVectorLayer):
         # force to split last item (hdop & checksum)
         row[-1], newitem = row[-1].split('*', 1)
         row.append('*' + newitem)
+
+        # check validity
+        # drop data according
+        # - HDOP (row[-2]) = 9999
+        if row[-2] == '9999':
+            if 'HDOP' not in self._errs:
+                self._errs['HDOP'] = 0
+            self._errs['HDOP'] +=  1
+            return None
 
         # compute ader_microSvh
         try:
