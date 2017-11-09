@@ -326,6 +326,15 @@ class SafecastLayer(QgsVectorLayer):
         """
         return os.path.dirname(self._fileName)
 
+    def filename(self):
+        """Return layer file name without extension.
+
+        :return: filename as a string
+        """
+        return os.path.splitext(
+            os.path.basename(self._fileName)
+        )[0]
+
     def _update_stats(self, value):
         """Update ader statistics.
 
