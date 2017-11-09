@@ -35,9 +35,9 @@ from qgis.gui import QgsMessageBar
 
 from .reader import SafecastReaderError
 
-def check_version_2_18():
-    version = map(int, QGis.QGIS_VERSION.split('.'))
-    if version[0] >= 2 and version[1] >= 18:
+def check_version(min_version=(2,18)):
+    version = map(int, QGis.QGIS_VERSION.split('.')[:2])
+    if version[0] >= min_version[0] and version[1] >= min_version[1]:
         return True
 
     return False
@@ -119,7 +119,7 @@ class SafecastLayer(QgsVectorLayer):
         self._provider = self.dataProvider()
 
         # set aliases when running QGIS 2.18+
-        if check_version_2_18():
+        if check_version():
             self._setAliases(attrbs)
 
         # set attributes
@@ -289,7 +289,7 @@ class SafecastLayer(QgsVectorLayer):
         x = coords_float(row[11], row[12])
         fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
 
-        if check_version_2_18() and self._storageFormat == "ogr":
+        if check_version() and self._storageFormat == "ogr":
             # force feature id (fix SQLite issue)
             row.insert(0, rowid)
 
