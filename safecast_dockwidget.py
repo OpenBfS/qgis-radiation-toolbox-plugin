@@ -314,7 +314,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             # are inserting item into layer tree)
             iface.legendInterface().setCurrentLayer(layer)
             # collapse layer
-            iface.legendInterface().setLayerExpanded(layer, False)
+            iface.legendInterface().setLayerExpanded(layer, True)
             # register new layer in plugin's internal list
             self._layers.append(layer)
         except (SafecastError, SafecastReaderError) as e:
