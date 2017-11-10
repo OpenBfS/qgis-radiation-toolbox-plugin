@@ -291,6 +291,17 @@ class SafecastLayer(QgsVectorLayer):
 
             return local.strftime('%H:%M:%S')
 
+        def datetime2year(datetime_value):
+            """Convert datatime value to year.
+
+            :datetime_value: date time value (eg. '2016-05-16T18:22:26Z')
+
+            :return: local time as a int (2016)
+            """
+            return datetime.strptime(
+                datetime_value, '%Y-%m-%dT%H:%M:%SZ'
+            ).year
+
         if len(row) != self._validNumAttrbs:
             raise SafecastReaderError(self.tr("Failed to read input data. Line: {}").format(','.join(row)))
 
@@ -302,11 +313,20 @@ class SafecastLayer(QgsVectorLayer):
         # drop data according
         # - HDOP (row[-2])
         if int(row[-2]) == 9999:
-            self._add_error('HDOP')
+            self._add_error('HDOP = 9999')
             return None
         # - SAT (row[-3])
         if int(row[-3]) < 3:
-            self._add_error('SAT')
+            self._add_error('SAT < 3')
+            return None
+        # - year (row[2])
+        myear = datetime2year(row[2])
+        minyear = 2011
+        maxyear = datetime.now().year
+        if myear < minyear or myear > maxyear:
+            self._add_error('year {0}-{1}'.format(
+                minyear, maxyear
+            ))
             return None
 
         # compute ader_microSvh
