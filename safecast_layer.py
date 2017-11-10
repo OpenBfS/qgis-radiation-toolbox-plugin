@@ -82,7 +82,7 @@ class SafecastLayer(QgsVectorLayer):
             QgsField("dose_current", QVariant.Double),
             QgsField("dose_cumulative", QVariant.Double),
             QgsField("time_local", QVariant.String),
-            QgsField("speed", QVariant.String),
+            QgsField("speed_kmph", QVariant.String),
             QgsField("device", QVariant.String),
             QgsField("device_id",  QVariant.Int),
             QgsField("date_time", QVariant.String),
@@ -147,11 +147,11 @@ class SafecastLayer(QgsVectorLayer):
         :params attrbs: list of QgsField instances
         """
         alias = [
-            self.tr("ADER microSv/h"),
+            self.tr("ADER (microSv/h)"),
             self.tr("Current DOSE"),
             self.tr("Cumulative DOSE"),
             self.tr("Local time"),
-            self.tr("Speed"),
+            self.tr("Speed (km/h)"),
             self.tr("Device"),
             self.tr("Device ID"),
             self.tr("Datetime"),
@@ -400,7 +400,7 @@ class SafecastLayer(QgsVectorLayer):
                 prev[7+idx],
                 row[6]
             ).total_seconds()
-            speed = dist / timediff
+            speed = (dist / 1e3) / (timediff / (60 * 60)) # kmph
         else:
             speed = None
         row.insert(4, speed)
