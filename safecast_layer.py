@@ -74,6 +74,8 @@ class SafecastLayer(QgsVectorLayer):
         # define attributes
         attrbs = [
             QgsField("ader_microsvh", QVariant.Double),
+            QgsField("dose_current", QVariant.Double),
+            QgsField("dose_cumulative", QVariant.Double),
             QgsField("time_local", QVariant.String),
             QgsField("device", QVariant.String),
             QgsField("device_id",  QVariant.Int),
@@ -92,8 +94,8 @@ class SafecastLayer(QgsVectorLayer):
             QgsField("hdop", QVariant.Int),
             QgsField("checksum", QVariant.String)
         ]
-        # four columns (fid, ader_microSvh, time_local, hdop, checksum) are computed
-        self._validNumAttrbs = len(attrbs) - 3
+        # four columns (fid, ader_microSvh, dose_current, dose_cumulative, time_local, hdop, checksum) are computed
+        self._validNumAttrbs = len(attrbs) - 5
 
         # create point layer (WGS-84, EPSG:4326)
         layerName = os.path.splitext(os.path.basename(self._fileName))[0]
@@ -140,6 +142,8 @@ class SafecastLayer(QgsVectorLayer):
         """
         alias = [
             self.tr("ADER microSv/h"),
+            self.tr("Current DOSE"),
+            self.tr("Cumulative DOSE"),
             self.tr("Local time"),
             self.tr("Device"),
             self.tr("Device ID"),
@@ -190,14 +194,16 @@ class SafecastLayer(QgsVectorLayer):
         i = 0
         count = reader.count()
         start = time.clock()
+        prev = None # previous feature
         # feats = []
 
         self.startEditing()
         for f in reader:
             i += 1
 
-            feat = self._process_row(f, i) # process feature
+            feat = self._process_row(f, i, prev) # process feature
             if feat:
+                prev = feat # remember feature for a next run
                 feat.setFeatureId(i)
                 self.addFeature(feat)
                 # feats.append(feat)
@@ -255,11 +261,12 @@ class SafecastLayer(QgsVectorLayer):
             self._errs[etype] = 0
         self._errs[etype] += 1
 
-    def _process_row(self, row, rowid):
+    def _process_row(self, row, rowid, prev):
         """Process line in LOG file and create a new point feature based on this line.
 
         :param row: row to be processed
         :param rowid: force feature id
+        :param prev: previous feature for cumulative values
         """
         # define internal functions first
         def coords_float(coord, ne):
@@ -351,12 +358,17 @@ class SafecastLayer(QgsVectorLayer):
         # update statistics
         self._update_stats(ader)
 
+        # compute current dose
+        row.insert(1, ader if not prev else (prev[0] + ader if prev[0] == prev[1] else ader))
+        # compute cumulative dose
+        row.insert(2, (prev[2] if prev else 0) + ader)
+
         # compute local time (from datetime)
         try:
-            time_local = datetime2localtime(row[3])
+            time_local = datetime2localtime(row[5])
         except ValueError:
             time_local = self.tr("unknown")
-        row.insert(1, time_local)
+        row.insert(3, time_local)
 
         # update plot data
         self._plot.append((time_local, ader))
