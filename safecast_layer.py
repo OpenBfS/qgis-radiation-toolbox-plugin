@@ -30,7 +30,7 @@ from PyQt4.QtGui import QProgressBar
 
 from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
     QgsGeometry, QgsPoint, QgsVectorFileWriter, QgsFields, \
-    QgsCoordinateReferenceSystem, QgsMessageLog
+    QgsCoordinateReferenceSystem, QgsMessageLog, QgsDistanceArea
 from qgis.utils import iface, QGis
 from qgis.gui import QgsMessageBar
 
@@ -71,12 +71,18 @@ class SafecastLayer(QgsVectorLayer):
         # import errors
         self._errs = {}
 
+        # create object for distance computation
+        self._distance = QgsDistanceArea()
+        self._distance.setEllipsoidalMode(True)
+        self._distance.setEllipsoid('WGS84')
+
         # define attributes
         attrbs = [
             QgsField("ader_microsvh", QVariant.Double),
             QgsField("dose_current", QVariant.Double),
             QgsField("dose_cumulative", QVariant.Double),
             QgsField("time_local", QVariant.String),
+            QgsField("speed", QVariant.String),
             QgsField("device", QVariant.String),
             QgsField("device_id",  QVariant.Int),
             QgsField("date_time", QVariant.String),
@@ -94,8 +100,8 @@ class SafecastLayer(QgsVectorLayer):
             QgsField("hdop", QVariant.Int),
             QgsField("checksum", QVariant.String)
         ]
-        # four columns (fid, ader_microSvh, dose_current, dose_cumulative, time_local, hdop, checksum) are computed
-        self._validNumAttrbs = len(attrbs) - 5
+        # four columns (fid, ader_microSvh, dose_current, dose_cumulative, time_local, speed, hdop, checksum) are computed
+        self._validNumAttrbs = len(attrbs) - 6
 
         # create point layer (WGS-84, EPSG:4326)
         layerName = os.path.splitext(os.path.basename(self._fileName))[0]
@@ -145,6 +151,7 @@ class SafecastLayer(QgsVectorLayer):
             self.tr("Current DOSE"),
             self.tr("Cumulative DOSE"),
             self.tr("Local time"),
+            self.tr("Speed"),
             self.tr("Device"),
             self.tr("Device ID"),
             self.tr("Datetime"),
@@ -313,6 +320,19 @@ class SafecastLayer(QgsVectorLayer):
             except ValueError:
                 return 0
 
+        def datetimediff(datetime_value1, datetime_value2):
+            """Compute datetime difference in sec.
+
+            :param datetime_value1: first value
+            :param datetime_value2: second value
+
+            :return: time difference in sec
+            """
+            val1 = datetime.strptime(datetime_value1, '%Y-%m-%dT%H:%M:%SZ')
+            val2 = datetime.strptime(datetime_value2, '%Y-%m-%dT%H:%M:%SZ')
+
+            return val2 - val1
+
         if len(row) != self._validNumAttrbs:
             raise SafecastReaderError(self.tr("Failed to read input data. Line: {}").format(','.join(row)))
 
@@ -323,6 +343,7 @@ class SafecastLayer(QgsVectorLayer):
         # set coordinates
         y = coords_float(row[7], row[8])
         x = coords_float(row[9], row[10])
+        point = QgsPoint(x, y)
 
         # check validity
         # drop data according
@@ -370,12 +391,21 @@ class SafecastLayer(QgsVectorLayer):
             time_local = self.tr("unknown")
         row.insert(3, time_local)
 
+        # compute speed
+        if prev:
+            dist = self._distance.measureLine(point, prev.geometry().asPoint())
+            timediff = datetimediff(prev[7], row[6]).total_seconds()
+            speed = dist / timediff
+        else:
+            speed = None
+        row.insert(4, speed)
+
         # update plot data
         self._plot.append((time_local, ader))
         
         # create new feature
         fet = QgsFeature()
-        fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
+        fet.setGeometry(QgsGeometry.fromPoint(point))
 
         if check_version() and self._storageFormat == "ogr":
             # force feature id (fix SQLite issue)
