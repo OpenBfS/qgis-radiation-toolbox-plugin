@@ -234,8 +234,8 @@ class SafecastLayer(QgsVectorLayer):
 
             for attr in self._errs.keys():
                 QgsMessageLog.logMessage(
-                    "{}: {} measurement(s) skipped (invalid HDOP)".format(
-                        self._fileName, self._errs[attr]
+                    "{}: {} measurement(s) skipped (invalid {})".format(
+                        self._fileName, self._errs[attr], attr
                     ),
                     level=QgsMessageLog.WARNING
                 )
@@ -244,6 +244,15 @@ class SafecastLayer(QgsVectorLayer):
         self._loaded = True
         # switch to read-only mode
         self.setReadOnly(True)
+
+    def _add_error(self, etype):
+        """Add error message.
+
+        :param etype: error type (HDOP, SAT, ...)
+        """
+        if etype not in self._errs:
+            self._errs[etype] = 0
+        self._errs[etype] += 1
 
     def _process_row(self, row, rowid):
         """Process line in LOG file and create a new point feature based on this line.
@@ -291,11 +300,13 @@ class SafecastLayer(QgsVectorLayer):
 
         # check validity
         # drop data according
-        # - HDOP (row[-2]) = 9999
-        if row[-2] == '9999':
-            if 'HDOP' not in self._errs:
-                self._errs['HDOP'] = 0
-            self._errs['HDOP'] +=  1
+        # - HDOP (row[-2])
+        if int(row[-2]) == 9999:
+            self._add_error('HDOP')
+            return None
+        # - SAT (row[-3])
+        if int(row[-3]) < 3:
+            self._add_error('SAT')
             return None
 
         # compute ader_microSvh
