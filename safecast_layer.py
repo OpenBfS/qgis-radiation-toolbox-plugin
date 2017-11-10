@@ -79,7 +79,7 @@ class SafecastLayer(QgsVectorLayer):
         # define attributes
         attrbs = [
             QgsField("ader_microsvh", QVariant.Double),
-            QgsField("dose_current", QVariant.Double),
+            QgsField("dose_increment", QVariant.Double),
             QgsField("dose_cumulative", QVariant.Double),
             QgsField("time_local", QVariant.String),
             QgsField("speed_kmph", QVariant.String),
@@ -148,7 +148,7 @@ class SafecastLayer(QgsVectorLayer):
         """
         alias = [
             self.tr("ADER (microSv/h)"),
-            self.tr("Current DOSE"),
+            self.tr("Increment DOSE"),
             self.tr("Cumulative DOSE"),
             self.tr("Local time"),
             self.tr("Speed (km/h)"),
