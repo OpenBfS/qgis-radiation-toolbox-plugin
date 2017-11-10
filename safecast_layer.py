@@ -414,7 +414,7 @@ class SafecastLayer(QgsVectorLayer):
         speed = None
         if prev:
             dist = self._distance.measureLine(point, prev.geometry().asPoint())
-            speed = (dist / 1e3) / (timediff / (60 * 60)) # kmph
+            speed = (dist / 1e3) / timediff # kmph
         row.insert(4, speed)
 
         # update plot data
