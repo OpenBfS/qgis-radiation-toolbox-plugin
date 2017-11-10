@@ -20,6 +20,7 @@
 """
 
 import os
+import sys
 import time
 from datetime import datetime
 from dateutil import tz
@@ -309,6 +310,10 @@ class SafecastLayer(QgsVectorLayer):
         row[-1], newitem = row[-1].split('*', 1)
         row.append('*' + newitem)
 
+        # set coordinates
+        y = coords_float(row[7], row[8])
+        x = coords_float(row[9], row[10])
+
         # check validity
         # drop data according
         # - HDOP (row[-2])
@@ -327,6 +332,11 @@ class SafecastLayer(QgsVectorLayer):
             self._add_error('year {0}-{1}'.format(
                 minyear, maxyear
             ))
+            return None
+        # - null island
+        if abs(x) < sys.float_info.epsilon or \
+           abs(y) < sys.float_info.epsilon:
+            self._add_error('null island')
             return None
 
         # compute ader_microSvh
@@ -350,9 +360,6 @@ class SafecastLayer(QgsVectorLayer):
         
         # create new feature
         fet = QgsFeature()
-        # set coordinates
-        y = coords_float(row[9], row[10])
-        x = coords_float(row[11], row[12])
         fet.setGeometry(QgsGeometry.fromPoint(QgsPoint(x, y)))
 
         if check_version() and self._storageFormat == "ogr":
