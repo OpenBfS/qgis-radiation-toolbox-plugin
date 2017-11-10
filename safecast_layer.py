@@ -381,10 +381,27 @@ class SafecastLayer(QgsVectorLayer):
 
         # TODO: find better approach
         idx = 1 if check_version() and self._storageFormat == "ogr" else 0
+
+        # time difference between two measurements (in hours)
+        timediff = None
+        if prev:
+            timediff = datetimediff(
+                prev[7+idx],
+                row[3]
+            ).total_seconds() / (60 * 60)
+
         # compute current dose
-        row.insert(1, ader if not prev else (prev[0+idx] + ader if prev[0+idx] == prev[1+idx] else ader))
+        dose = None
+        if prev:
+            dose = ader * timediff
+        row.insert(1, dose)
         # compute cumulative dose
-        row.insert(2, (prev[2+idx] if prev else 0) + ader)
+        dose_cum = None
+        if dose:
+            dose_cum = dose
+        if prev and prev[2+idx]:
+            dose_cum += prev[2+idx]
+        row.insert(2, dose_cum)
 
         # compute local time (from datetime)
         try:
@@ -394,15 +411,10 @@ class SafecastLayer(QgsVectorLayer):
         row.insert(3, time_local)
 
         # compute speed
+        speed = None
         if prev:
             dist = self._distance.measureLine(point, prev.geometry().asPoint())
-            timediff = datetimediff(
-                prev[7+idx],
-                row[6]
-            ).total_seconds()
             speed = (dist / 1e3) / (timediff / (60 * 60)) # kmph
-        else:
-            speed = None
         row.insert(4, speed)
 
         # update plot data
