@@ -394,7 +394,10 @@ class SafecastLayer(QgsVectorLayer):
         # compute speed
         if prev:
             dist = self._distance.measureLine(point, prev.geometry().asPoint())
-            timediff = datetimediff(prev[7], row[6]).total_seconds()
+            timediff = datetimediff(
+                prev[8 if check_version() and self._storageFormat == "ogr" else 7],
+                row[6]
+            ).total_seconds()
             speed = dist / timediff
         else:
             speed = None
