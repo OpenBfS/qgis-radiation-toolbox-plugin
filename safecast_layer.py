@@ -299,9 +299,12 @@ class SafecastLayer(QgsVectorLayer):
 
             :return: local time as a int (2016)
             """
-            return datetime.strptime(
-                datetime_value, '%Y-%m-%dT%H:%M:%SZ'
-            ).year
+            try:
+                return datetime.strptime(
+                    datetime_value, '%Y-%m-%dT%H:%M:%SZ'
+                ).year
+            except ValueError:
+                return 0
 
         if len(row) != self._validNumAttrbs:
             raise SafecastReaderError(self.tr("Failed to read input data. Line: {}").format(','.join(row)))
@@ -329,7 +332,7 @@ class SafecastLayer(QgsVectorLayer):
         minyear = 2011
         maxyear = datetime.now().year
         if myear < minyear or myear > maxyear:
-            self._add_error('year {0}-{1}'.format(
+            self._add_error('year <> {0}-{1}'.format(
                 minyear, maxyear
             ))
             return None
