@@ -448,7 +448,7 @@ class SafecastLayer(QgsVectorLayer):
                 features = self.getFeatures()
                 for feat in features:
                     attrs = feat.attributes()
-                    for val in attrs[2:-2]: # skip ader_microSvh and local time
+                    for val in attrs[5:-2]: # skip calculated points
                         f.write('{},'.format(val))
                     f.write('{}{}\n'.format(attrs[-2], attrs[-1]))
         except IOError as e:
