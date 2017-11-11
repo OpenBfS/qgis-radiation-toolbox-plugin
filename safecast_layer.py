@@ -100,8 +100,15 @@ class SafecastLayer(QgsVectorLayer):
             QgsField("hdop", QVariant.Int),
             QgsField("checksum", QVariant.String)
         ]
-        # four columns (fid, ader_microSvh, dose_current, dose_cumulative, time_local, speed, hdop, checksum) are computed
-        self._validNumAttrbs = len(attrbs) - 6
+        # skip computed attributes
+        # - ader_microsvh
+        # - dose_increment
+        # - dose_cumulative
+        # - time_local
+        # - speed_kmph
+        self._skipNumAttrbs = 5
+        # two last columns split (hdop + checksum)
+        self._validNumAttrbs = len(attrbs) - (self._skipNumAttrbs + 1)
 
         # create point layer (WGS-84, EPSG:4326)
         layerName = os.path.splitext(os.path.basename(self._fileName))[0]
@@ -448,8 +455,9 @@ class SafecastLayer(QgsVectorLayer):
                 features = self.getFeatures()
                 for feat in features:
                     attrs = feat.attributes()
-                    for val in attrs[5:-2]: # skip calculated points
+                    for val in attrs[self._skipNumAttrbs:-2]: # skip calculated points
                         f.write('{},'.format(val))
+                    # join two last columns(hdop+checksum)
                     f.write('{}{}\n'.format(attrs[-2], attrs[-1]))
         except IOError as e:
             raise SafecastWriterError(e)
