@@ -455,10 +455,14 @@ class SafecastLayer(QgsVectorLayer):
                 features = self.getFeatures()
                 for feat in features:
                     attrs = feat.attributes()
+                    row = ''
                     for val in attrs[self._skipNumAttrbs:-2]: # skip calculated points
-                        f.write('{},'.format(val))
+                        row += '{},'.format(val)
+                    row += '{}'.format(attrs[-2])
                     # join two last columns(hdop+checksum)
-                    f.write('{}{}\n'.format(attrs[-2], attrs[-1]))
+                    checksum = self.gps_checksum(row[1:]) # skip '$'
+                    row += '*{}\n'.format(checksum)
+                    f.write(row)
         except IOError as e:
             raise SafecastWriterError(e)
 
@@ -507,3 +511,17 @@ class SafecastLayer(QgsVectorLayer):
             y.append(ader)
 
         return x, y
+
+    def gps_checksum(self, row):
+        """Compute checksum of row.
+
+        :param row: row line
+
+        :return: checksum
+        """
+        chk = ord(row[0])
+
+        for ichk in row[1:]:
+            chk ^= ord(ichk)
+
+        return hex(chk)[2:].upper()
