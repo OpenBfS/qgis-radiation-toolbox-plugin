@@ -29,7 +29,7 @@ from PyQt4.QtGui import QFileDialog, QMessageBox, QToolBar, QGridLayout, QLabel,
     QSpacerItem, QSizePolicy, QTableWidget
 from PyQt4.QtCore import QSignalMapper, SIGNAL, SLOT, pyqtSignal, QSettings
 
-from qgis.core import QgsMapLayerRegistry, QgsProject
+from qgis.core import QgsMapLayerRegistry, QgsProject, QgsRasterLayer
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -78,11 +78,10 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         # load internal styles
         self._initStyles()
 
-        # initialize statistics
+        # initialize internal variables
         self._initStats()
-        
-        # initialize plot
         self._initPlot()
+        self._initMaps()
 
         # list of layers (must be defined, otherwise SafecastLayer is
         # not returned by getActiveLayer()
@@ -128,6 +127,8 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                      SIGNAL("currentIndexChanged(int)"), self.onPlotStyle)
         self.connect(self.storageCombo,
                      SIGNAL("currentIndexChanged(int)"), self.onStorageFormat)
+        self.connect(self.onlineMapsButton,
+                     SIGNAL("clicked()"), self.onAddOnlineMap)
 
     def _loadSettings(self):
         """Load settings."""
@@ -254,6 +255,15 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             # set group tile
             self.groupPlot.setTitle(self.tr("Plot"))
 
+    def _initMaps(self):
+        self._onlineMaps = [
+            ("OpenStreetMap", "layers=OSM-WMS&url=http://ows.mundialis.de/services/service?")
+        ]
+        self._onlineMapsDefaultParams = 'contextualWMSLegend=0&crs=EPSG:4326&dpiMode=7&featureCount=10&format=image/jpeg&styles=&'
+
+        # add items
+        self.onlineMapsCombo.addItems(list(item[0] for item in self._onlineMaps))
+
     def stylePath(self):
         """Get style path (when local QML files are located).
 
@@ -313,7 +323,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             # select this layer (this must be done manually since we
             # are inserting item into layer tree)
             iface.legendInterface().setCurrentLayer(layer)
-            # collapse layer
+            # expand layer
             iface.legendInterface().setLayerExpanded(layer, True)
             # register new layer in plugin's internal list
             self._layers.append(layer)
@@ -493,6 +503,22 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         # remember current storage format
         sender = 'safecast-{}-lastCurrentIndex'.format(self.sender().objectName())
         self._settings.setValue(sender, idx)
+
+    def onAddOnlineMap(self):
+        """Add online basemap to layer tree
+        """
+        idx = self.onlineMapsCombo.currentIndex()
+        name, baseParams = self._onlineMaps[idx]
+        datasource = baseParams + self._onlineMapsDefaultParams
+        layer = QgsRasterLayer(datasource,
+                               name,
+                               'wms'
+        )
+        QgsMapLayerRegistry.instance().addMapLayer(layer, False)
+        # force register layer in TOC as a last item
+        QgsProject.instance().layerTreeRoot().insertLayer(-1, layer)
+        # collapse layer
+        iface.legendInterface().setLayerExpanded(layer, False)
 
     def getActiveLayer(self):
         """Get currently selected (active) layer.
