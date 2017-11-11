@@ -13,7 +13,7 @@
   <property name="minimumSize">
    <size>
     <width>272</width>
-    <height>228</height>
+    <height>244</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -27,6 +27,9 @@
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QGridLayout" name="gridLayout">
+    <property name="margin">
+     <number>9</number>
+    </property>
     <item row="1" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
@@ -36,13 +39,16 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tabLoadEdit">
        <attribute name="title">
         <string>Load and Edit</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_2">
+        <property name="margin">
+         <number>5</number>
+        </property>
         <item row="1" column="0">
          <widget class="QLabel" name="styleLabel">
           <property name="maximumSize">
@@ -98,6 +104,9 @@
         <string>Stats</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_3">
+        <property name="margin">
+         <number>5</number>
+        </property>
         <item row="0" column="0">
          <widget class="QGroupBox" name="groupStats">
           <property name="font">
@@ -139,6 +148,9 @@ QGroupBox::title {
         <string>Plot</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_4">
+        <property name="margin">
+         <number>5</number>
+        </property>
         <item row="0" column="0">
          <widget class="QGroupBox" name="groupPlot">
           <property name="styleSheet">
@@ -166,6 +178,9 @@ QGroupBox::title {
         <string>Settings</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
+        <property name="margin">
+         <number>5</number>
+        </property>
         <item row="1" column="0">
          <widget class="QGroupBox" name="plotGroupBox">
           <property name="styleSheet">
@@ -198,12 +213,12 @@ QGroupBox::title {
               <widget class="QComboBox" name="plotStyleCombo">
                <item>
                 <property name="text">
-                 <string>lines</string>
+                 <string>Lines</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>points</string>
+                 <string>Points</string>
                 </property>
                </item>
               </widget>
