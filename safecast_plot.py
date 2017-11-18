@@ -121,7 +121,7 @@ class SafecastPlot(Qwt.QwtPlot):
             return h + m / 60. + s / 3600.
             
         # collect plot coordinates
-        x, y = layer.plot_data()
+        x, y = layer.plotData()
             
         # clear plot first
         if hasQwt5:

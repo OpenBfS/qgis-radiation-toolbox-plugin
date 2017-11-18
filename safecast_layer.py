@@ -215,7 +215,7 @@ class SafecastLayer(QgsVectorLayer):
         for f in reader:
             i += 1
 
-            feat = self._process_row(f, i, prev) # process feature
+            feat = self._processRow(f, i, prev) # process feature
             if feat:
                 prev = feat # remember feature for a next run
                 feat.setFeatureId(i)
@@ -229,6 +229,9 @@ class SafecastLayer(QgsVectorLayer):
         # add features
         self.commitChanges()
         # self._provider.addFeatures(feats)
+
+        # recalculate attributes for all features (dose, speed, ...)
+        self.recalculateAttributes()
 
         endtime = time.clock() - start
         progress.setValue(100)
@@ -266,7 +269,7 @@ class SafecastLayer(QgsVectorLayer):
         # switch to read-only mode
         self.setReadOnly(True)
 
-    def _add_error(self, etype):
+    def _addError(self, etype):
         """Add error message.
 
         :param etype: error type (HDOP, SAT, ...)
@@ -275,7 +278,20 @@ class SafecastLayer(QgsVectorLayer):
             self._errs[etype] = 0
         self._errs[etype] += 1
 
-    def _process_row(self, row, rowid, prev):
+    def _datetimediff(self, datetime_value1, datetime_value2):
+        """Compute datetime difference in sec.
+
+        :param datetime_value1: first value
+        :param datetime_value2: second value
+
+        :return: time difference in sec
+        """
+        val1 = datetime.strptime(datetime_value1, '%Y-%m-%dT%H:%M:%SZ')
+        val2 = datetime.strptime(datetime_value2, '%Y-%m-%dT%H:%M:%SZ')
+
+        return val2 - val1
+
+    def _processRow(self, row, rowid, prev):
         """Process line in LOG file and create a new point feature based on this line.
 
         :param row: row to be processed
@@ -327,19 +343,6 @@ class SafecastLayer(QgsVectorLayer):
             except ValueError:
                 return 0
 
-        def datetimediff(datetime_value1, datetime_value2):
-            """Compute datetime difference in sec.
-
-            :param datetime_value1: first value
-            :param datetime_value2: second value
-
-            :return: time difference in sec
-            """
-            val1 = datetime.strptime(datetime_value1, '%Y-%m-%dT%H:%M:%SZ')
-            val2 = datetime.strptime(datetime_value2, '%Y-%m-%dT%H:%M:%SZ')
-
-            return val2 - val1
-
         if len(row) != self._validNumAttrbs:
             raise SafecastReaderError(self.tr("Failed to read input data. Line: {}").format(','.join(row)))
 
@@ -356,25 +359,25 @@ class SafecastLayer(QgsVectorLayer):
         # drop data according
         # - HDOP (row[-2])
         if int(row[-2]) == 9999:
-            self._add_error('HDOP = 9999')
+            self._addError('HDOP = 9999')
             return None
         # - SAT (row[-3])
         if int(row[-3]) < 3:
-            self._add_error('SAT < 3')
+            self._addError('SAT < 3')
             return None
         # - year (row[2])
         myear = datetime2year(row[2])
         minyear = 2011
         maxyear = datetime.now().year
         if myear < minyear or myear > maxyear:
-            self._add_error('year <> {0}-{1}'.format(
+            self._addError('year <> {0}-{1}'.format(
                 minyear, maxyear
             ))
             return None
         # - null island
         if abs(x) < sys.float_info.epsilon or \
            abs(y) < sys.float_info.epsilon:
-            self._add_error('null island')
+            self._addError('null island')
             return None
 
         # compute ader_microSvh
@@ -384,31 +387,11 @@ class SafecastLayer(QgsVectorLayer):
             ader = -1
         row.insert(0, ader)
         # update statistics
-        self._update_stats(ader)
+        self._updateStats(ader)
 
-        # TODO: find better approach
-        idx = 1 if check_version() and self._storageFormat == "ogr" else 0
-
-        # time difference between two measurements (in hours)
-        timediff = None
-        if prev:
-            timediff = datetimediff(
-                prev[7+idx],
-                row[3]
-            ).total_seconds() / (60 * 60)
-
-        # compute current dose
-        dose = None
-        if prev:
-            dose = ader * timediff
-        row.insert(1, dose)
-        # compute cumulative dose
-        dose_cum = None
-        if dose:
-            dose_cum = dose
-        if prev and prev[2+idx]:
-            dose_cum += prev[2+idx]
-        row.insert(2, dose_cum)
+        # dose increment + cumulative will be calculated after loading whole file
+        row.insert(1, None)
+        row.insert(2, None)
 
         # compute local time (from datetime)
         try:
@@ -417,12 +400,8 @@ class SafecastLayer(QgsVectorLayer):
             time_local = self.tr("unknown")
         row.insert(3, time_local)
 
-        # compute speed
-        speed = None
-        if prev:
-            dist = self._distance.measureLine(point, prev.geometry().asPoint())
-            speed = (dist / 1e3) / timediff # kmph
-        row.insert(4, speed)
+        # speed will be calculated after loading whole file
+        row.insert(4, None)
 
         # update plot data
         self._plot.append((time_local, ader))
@@ -460,7 +439,7 @@ class SafecastLayer(QgsVectorLayer):
                         row += '{},'.format(val)
                     row += '{}'.format(attrs[-2])
                     # join two last columns(hdop+checksum)
-                    checksum = self.gps_checksum(row[1:]) # skip '$'
+                    checksum = self._gpsChecksum(row[1:]) # skip '$'
                     row += '*{}\n'.format(checksum)
                     f.write(row)
         except IOError as e:
@@ -482,7 +461,7 @@ class SafecastLayer(QgsVectorLayer):
             os.path.basename(self._fileName)
         )[0]
 
-    def _update_stats(self, value):
+    def _updateStats(self, value):
         """Update ader statistics.
 
         :param ader: ader statistics
@@ -499,7 +478,7 @@ class SafecastLayer(QgsVectorLayer):
         """Get layer statistics"""
         return self._stats
 
-    def plot_data(self):
+    def plotData(self):
         def time2float(value):
             h, m, s = map(float, value.split(':'))
             return h + m / 60. + s / 3600.
@@ -512,7 +491,7 @@ class SafecastLayer(QgsVectorLayer):
 
         return x, y
 
-    def gps_checksum(self, row):
+    def _gpsChecksum(self, row):
         """Compute checksum of row.
 
         :param row: row line
@@ -525,3 +504,58 @@ class SafecastLayer(QgsVectorLayer):
             chk ^= ord(ichk)
 
         return hex(chk)[2:].upper()
+
+    def recalculateAttributes(self):
+        """Update layer after adding.
+
+        Recalculate:
+         - dose (increment, cumulative)
+         - speed
+        """
+        # TODO: find better approach
+        idx = 1 if check_version() and self._storageFormat == "ogr" else 0
+
+        dose_inc_idx = self.fieldNameIndex("dose_increment")
+        dose_cum_idx = self.fieldNameIndex("dose_cumulative")
+        speed_idx = self.fieldNameIndex("speed_kmph")
+
+        prev = None     # previous feature
+        dose_inc = None
+        dose_cum = None
+        timediff = None
+        speed = None
+
+        self.startEditing()
+        iter = self.getFeatures()
+        for feat in iter:
+            if prev:
+                timediff = self._datetimediff(
+                    prev.attribute("date_time"),
+                    feat.attribute("date_time")
+                ).total_seconds() / (60 * 60)
+
+                dose_inc = feat.attribute("ader_microsvh") * timediff
+
+                # speed
+                dist = self._distance.measureLine(
+                    feat.geometry().asPoint(),
+                    prev.geometry().asPoint()
+                )
+                speed = (dist / 1e3) / timediff # kmph
+
+            if dose_inc:
+                if dose_cum is None:
+                    dose_cum = 0
+                dose_cum += dose_inc
+
+            prev = feat
+            attrs = { dose_inc_idx: dose_inc,
+                      dose_cum_idx: dose_cum,
+                      speed_idx: speed,
+            }
+            self._provider.changeAttributeValues(
+                { feat.id() : attrs }
+            )
+        self.commitChanges()
+
+        self._provider.forceReload()

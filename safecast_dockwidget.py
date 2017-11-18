@@ -488,6 +488,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                 iface.actionDeleteSelected().trigger()
                 iface.actionSaveActiveLayerEdits().trigger()
                 iface.actionToggleEditing().trigger()
+                layer.recalculateAttributes()
                 layer.setReadOnly(True)
         else:
             # inform user - no features selected, nothing to be deleted
