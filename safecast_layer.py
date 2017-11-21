@@ -82,7 +82,7 @@ class SafecastLayer(QgsVectorLayer):
             QgsField("dose_increment", QVariant.Double),
             QgsField("dose_cumulative", QVariant.Double),
             QgsField("time_local", QVariant.String),
-            QgsField("speed_kmph", QVariant.String),
+            QgsField("speed_kmph", QVariant.Double),
             QgsField("device", QVariant.String),
             QgsField("device_id",  QVariant.Int),
             QgsField("date_time", QVariant.String),
