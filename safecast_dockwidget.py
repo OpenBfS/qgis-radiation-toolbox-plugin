@@ -142,7 +142,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
     def _initStyles(self):
         """Define internal styles and polulates items in combobox."""
         self._styles = [
-            {'name' : '0.08 - 5.00 microSv/h', 'file' : 'normal'},
+            {'name' : '0.08 - 10.00 microSv/h', 'file' : 'normal'},
             {'name' : '0.05 - 200.00 microSv/h', 'file' : 'high'}
         ]
 
