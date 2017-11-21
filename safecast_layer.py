@@ -78,11 +78,11 @@ class SafecastLayer(QgsVectorLayer):
 
         # define attributes
         attrbs = [
-            QgsField("ader_microsvh", QVariant.Double),
+            QgsField("ader_microsvh", QVariant.Double, prec=4),
             QgsField("dose_increment", QVariant.Double),
             QgsField("dose_cumulative", QVariant.Double),
             QgsField("time_local", QVariant.String),
-            QgsField("speed_kmph", QVariant.Double),
+            QgsField("speed_kmph", QVariant.Double, prec=2),
             QgsField("device", QVariant.String),
             QgsField("device_id",  QVariant.Int),
             QgsField("date_time", QVariant.String),
