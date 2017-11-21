@@ -215,6 +215,10 @@ class SafecastLayer(QgsVectorLayer):
         for f in reader:
             i += 1
 
+            if len(f) < 1:
+                # skip empty lines
+                continue
+
             feat = self._processRow(f, i, prev) # process feature
             if feat:
                 prev = feat # remember feature for a next run
