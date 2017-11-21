@@ -382,7 +382,12 @@ class SafecastLayer(QgsVectorLayer):
 
         # compute ader_microSvh
         try:
-            ader = int(row[3]) * 0.0028571429
+            pulse5s = int(row[4])
+            if pulse5s > 0:
+                ader = pulse5s * 12
+            else:
+                ader = int(row[3]) # cpm
+            ader *= 0.0029940119760479
         except ValueError:
             ader = -1
         row.insert(0, ader)
