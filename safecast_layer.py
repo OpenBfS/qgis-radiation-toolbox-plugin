@@ -22,7 +22,7 @@
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import tz
 
 from PyQt4.QtCore import QVariant
@@ -79,10 +79,11 @@ class SafecastLayer(QgsVectorLayer):
         # define attributes
         attrbs = [
             QgsField("ader_microsvh", QVariant.Double, prec=4),
-            QgsField("dose_increment", QVariant.Double),
-            QgsField("dose_cumulative", QVariant.Double),
             QgsField("time_local", QVariant.String),
             QgsField("speed_kmph", QVariant.Double, prec=2),
+            QgsField("dose_increment", QVariant.Double),
+            QgsField("time_cumulative", QVariant.String),
+            QgsField("dose_cumulative", QVariant.Double),
             QgsField("device", QVariant.String),
             QgsField("device_id",  QVariant.Int),
             QgsField("date_time", QVariant.String),
@@ -102,11 +103,12 @@ class SafecastLayer(QgsVectorLayer):
         ]
         # skip computed attributes
         # - ader_microsvh
-        # - dose_increment
-        # - dose_cumulative
         # - time_local
         # - speed_kmph
-        self._skipNumAttrbs = 5
+        # - dose_increment
+        # - time_cumulative
+        # - dose_cumulative
+        self._skipNumAttrbs = 6
         # two last columns split (hdop + checksum)
         self._validNumAttrbs = len(attrbs) - (self._skipNumAttrbs + 1)
 
@@ -155,10 +157,11 @@ class SafecastLayer(QgsVectorLayer):
         """
         alias = [
             self.tr("ADER (microSv/h)"),
-            self.tr("Increment DOSE"),
-            self.tr("Cumulative DOSE"),
             self.tr("Local time"),
             self.tr("Speed (km/h)"),
+            self.tr("Increment DOSE"),
+            self.tr("Cumulative time"),
+            self.tr("Cumulative DOSE"),
             self.tr("Device"),
             self.tr("Device ID"),
             self.tr("Datetime"),
@@ -398,19 +401,20 @@ class SafecastLayer(QgsVectorLayer):
         # update statistics
         self._updateStats(ader)
 
-        # dose increment + cumulative will be calculated after loading whole file
-        row.insert(1, None)
-        row.insert(2, None)
-
         # compute local time (from datetime)
         try:
-            time_local = datetime2localtime(row[5])
+            time_local = datetime2localtime(row[3])
         except ValueError:
             time_local = self.tr("unknown")
-        row.insert(3, time_local)
+        row.insert(1, time_local)
 
         # speed will be calculated after loading whole file
+        row.insert(2, None)
+
+        # dose increment + time/dose cumulative will be calculated after loading whole file
+        row.insert(3, None)
         row.insert(4, None)
+        row.insert(5, None)
 
         # update plot data
         self._plot.append((time_local, ader))
@@ -525,11 +529,14 @@ class SafecastLayer(QgsVectorLayer):
         idx = 1 if check_version() and self._storageFormat == "ogr" else 0
 
         dose_inc_idx = self.fieldNameIndex("dose_increment")
+        time_cum_idx = self.fieldNameIndex("time_cumulative")
         dose_cum_idx = self.fieldNameIndex("dose_cumulative")
         speed_idx = self.fieldNameIndex("speed_kmph")
 
         prev = None     # previous feature
+
         dose_inc = None
+        time_cum = 0
         dose_cum = None
         timediff = None
         speed = None
@@ -552,6 +559,9 @@ class SafecastLayer(QgsVectorLayer):
                 )
                 speed = (dist / 1e3) / timediff # kmph
 
+                # time cumulative
+                time_cum += timediff
+
             if dose_inc:
                 if dose_cum is None:
                     dose_cum = 0
@@ -559,6 +569,9 @@ class SafecastLayer(QgsVectorLayer):
 
             prev = feat
             attrs = { dose_inc_idx: dose_inc,
+                      time_cum_idx: (
+                          datetime(2000,1,1) + timedelta(hours=time_cum)
+                      ).strftime("%H:%M:%S"),
                       dose_cum_idx: dose_cum,
                       speed_idx: speed,
             }
