@@ -22,7 +22,7 @@
 import os
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from dateutil import tz
 
 from PyQt4.QtCore import QVariant
@@ -285,7 +285,7 @@ class SafecastLayer(QgsVectorLayer):
             self._errs[etype] = 0
         self._errs[etype] += 1
 
-    def _datetimediff(self, datetime_value1, datetime_value2):
+    def _datetimediff(self, datetime_value1, datetime_value2, timeonly=False):
         """Compute datetime difference in sec.
 
         :param datetime_value1: first value
@@ -296,7 +296,25 @@ class SafecastLayer(QgsVectorLayer):
         val1 = datetime.strptime(datetime_value1, '%Y-%m-%dT%H:%M:%SZ')
         val2 = datetime.strptime(datetime_value2, '%Y-%m-%dT%H:%M:%SZ')
 
+        if timeonly:
+            val1 = datetime.combine(date.today(), val1.time())
+            val2 = datetime.combine(date.today(), val2.time())
+
         return val2 - val1
+
+    def _datetime2year(self, datetime_value):
+        """Convert datatime value to year.
+
+        :datetime_value: date time value (eg. '2016-05-16T18:22:26Z')
+
+        :return: local time as a int (2016)
+        """
+        try:
+            return datetime.strptime(
+                datetime_value, '%Y-%m-%dT%H:%M:%SZ'
+            ).year
+        except ValueError:
+            return 0
 
     def _processRow(self, row, rowid, prev):
         """Process line in LOG file and create a new point feature based on this line.
@@ -336,19 +354,6 @@ class SafecastLayer(QgsVectorLayer):
 
             return local.strftime('%H:%M:%S')
 
-        def datetime2year(datetime_value):
-            """Convert datatime value to year.
-
-            :datetime_value: date time value (eg. '2016-05-16T18:22:26Z')
-
-            :return: local time as a int (2016)
-            """
-            try:
-                return datetime.strptime(
-                    datetime_value, '%Y-%m-%dT%H:%M:%SZ'
-                ).year
-            except ValueError:
-                return 0
 
         if len(row) != self._validNumAttrbs:
             raise SafecastReaderError(self.tr("Failed to read input data. Line: {}").format(','.join(row)))
@@ -372,15 +377,16 @@ class SafecastLayer(QgsVectorLayer):
         if int(row[-3]) < 3:
             self._addError('SAT < 3')
             return None
+        ### Date validity will be performed when whole file loaded
         # - year (row[2])
-        myear = datetime2year(row[2])
-        minyear = 2011
-        maxyear = datetime.now().year
-        if myear < minyear or myear > maxyear:
-            self._addError('year <> {0}-{1}'.format(
-                minyear, maxyear
-            ))
-            return None
+        # myear = datetime2year(row[2])
+        # minyear = 2011
+        # maxyear = datetime.now().year
+        # if myear < minyear or myear > maxyear:
+        #     self._addError('year <> {0}-{1}'.format(
+        #         minyear, maxyear
+        #     ))
+        #     return None
         # - null island
         if abs(x) < sys.float_info.epsilon or \
            abs(y) < sys.float_info.epsilon:
@@ -518,6 +524,55 @@ class SafecastLayer(QgsVectorLayer):
 
         return hex(chk)[2:].upper()
 
+    def _checkDate(self, fdate):
+        """Check if date is valid.
+
+        :param fdate: date to be checked
+
+        :return: True if date is valid otherwise False
+        """
+        minyear = 2011
+        maxyear = datetime.now().year
+        myear = self._datetime2year(fdate)
+        if myear < minyear or myear > maxyear:
+            return False
+        return True
+
+    def _validateDate(self, feat_datetime, prev_datetime, first_valid_date):
+        """Validate date.
+
+        :param feat_datetime: date to be validated
+        :param prev_datetime: previous date or None
+        :param first_valid_date: first valid date (if prev_datetime is None)
+
+        :return: validate date, update flag
+        """
+        if self._checkDate(feat_datetime):
+            return feat_datetime, False
+
+        if prev_datetime:
+            timediff = self._datetimediff(
+                prev_datetime, feat_datetime, timeonly=True
+            ).total_seconds()
+            fdate = datetime.strptime(
+                prev_datetime, "%Y-%m-%dT%H:%M:%SZ"
+            ).date()
+        else:
+            timediff = 0
+            fdate = first_valid_date
+
+        if timediff < 0:
+            # next date
+            fdate += timedelta(days=1)
+
+        return datetime.strftime(
+            datetime.combine(
+                fdate,
+                datetime.strptime(feat_datetime, "%Y-%m-%dT%H:%M:%SZ").time()
+            ),
+            '%Y-%m-%dT%H:%M:%SZ'
+        ), True
+
     def recalculateAttributes(self):
         """Update layer after adding.
 
@@ -532,6 +587,7 @@ class SafecastLayer(QgsVectorLayer):
         time_cum_idx = self.fieldNameIndex("time_cumulative")
         dose_cum_idx = self.fieldNameIndex("dose_cumulative")
         speed_idx = self.fieldNameIndex("speed_kmph")
+        datetime_idx = self.fieldNameIndex("date_time")
 
         prev = None     # previous feature
 
@@ -541,13 +597,36 @@ class SafecastLayer(QgsVectorLayer):
         timediff = None
         speed = None
 
-        self.startEditing()
+        # fix first valid datetime
+        first_valid_date = None
         iter = self.getFeatures()
         for feat in iter:
+            fdate_time = feat.attribute("date_time")
+            if self._checkDate(fdate_time):
+                first_valid_date = datetime.strptime(fdate_time, "%Y-%m-%dT%H:%M:%SZ").date()
+                break
+
+        if first_valid_date is None:
+            iface.messageBar().pushMessage(
+                self.tr("Warning"),
+                self.tr("No valid date found. Unable to fix datetime."),
+                level=QgsMessageBar.WARNING,
+                duration=5
+            )
+
+        self.startEditing()
+
+        prev_datetime = None
+        iter = self.getFeatures()
+        for feat in iter:
+            feat_datetime = feat.attribute("date_time")
+            # fix date if invalid
+            feat_datetime, newdt = self._validateDate(feat_datetime, prev_datetime, first_valid_date)
+
             if prev:
                 timediff = self._datetimediff(
                     prev.attribute("date_time"),
-                    feat.attribute("date_time")
+                    feat_datetime
                 ).total_seconds() / (60 * 60)
 
                 dose_inc = feat.attribute("ader_microsvh") * timediff
@@ -567,7 +646,12 @@ class SafecastLayer(QgsVectorLayer):
                     dose_cum = 0
                 dose_cum += dose_inc
 
+
+            # set previous feature for next run
             prev = feat
+            prev_datetime = feat_datetime
+
+            # update attributes
             attrs = { dose_inc_idx: dose_inc,
                       time_cum_idx: (
                           datetime(2000,1,1) + timedelta(hours=time_cum)
@@ -575,9 +659,14 @@ class SafecastLayer(QgsVectorLayer):
                       dose_cum_idx: dose_cum,
                       speed_idx: speed,
             }
+            if newdt:
+                attrs[datetime_idx] = feat_datetime
+
             self._provider.changeAttributeValues(
                 { feat.id() : attrs }
             )
+
+        # save changes
         self.commitChanges()
 
         self._provider.forceReload()
