@@ -293,12 +293,14 @@ class SafecastLayer(QgsVectorLayer):
 
         :return: time difference in sec
         """
-        val1 = datetime.strptime(datetime_value1, '%Y-%m-%dT%H:%M:%SZ')
-        val2 = datetime.strptime(datetime_value2, '%Y-%m-%dT%H:%M:%SZ')
-
         if timeonly:
-            val1 = datetime.combine(date.today(), val1.time())
-            val2 = datetime.combine(date.today(), val2.time())
+            t1 = datetime.strptime(datetime_value1.split('T', 1)[1], '%H:%M:%SZ')
+            t2 = datetime.strptime(datetime_value2.split('T', 1)[1], '%H:%M:%SZ')
+            val1 = datetime.combine(date.today(), t1.time())
+            val2 = datetime.combine(date.today(), t2.time())
+        else:
+            val1 = datetime.strptime(datetime_value1, '%Y-%m-%dT%H:%M:%SZ')
+            val2 = datetime.strptime(datetime_value2, '%Y-%m-%dT%H:%M:%SZ')
 
         return val2 - val1
 
@@ -568,7 +570,7 @@ class SafecastLayer(QgsVectorLayer):
         return datetime.strftime(
             datetime.combine(
                 fdate,
-                datetime.strptime(feat_datetime, "%Y-%m-%dT%H:%M:%SZ").time()
+                datetime.strptime(feat_datetime.split('T', 1)[1], "%H:%M:%SZ").time()
             ),
             '%Y-%m-%dT%H:%M:%SZ'
         ), True
@@ -622,10 +624,9 @@ class SafecastLayer(QgsVectorLayer):
             feat_datetime = feat.attribute("date_time")
             # fix date if invalid
             feat_datetime, newdt = self._validateDate(feat_datetime, prev_datetime, first_valid_date)
-
             if prev:
                 timediff = self._datetimediff(
-                    prev.attribute("date_time"),
+                    prev_datetime,
                     feat_datetime
                 ).total_seconds() / (60 * 60)
 
