@@ -318,6 +318,22 @@ class SafecastLayer(QgsVectorLayer):
         except ValueError:
             return 0
 
+    def _datetime2localtime(self, datetime_value):
+        """Convert datetime value to local time.
+
+        :datetime_value: date time value (eg. '2016-05-16T18:22:26Z')
+
+        :return: local time as a string (eg. '20:22:26')
+        """
+        from_zone = tz.tzutc()
+        to_zone = tz.tzlocal()
+
+        utc = datetime.strptime(datetime_value, '%Y-%m-%dT%H:%M:%SZ')
+        utc = utc.replace(tzinfo=from_zone)
+        local = utc.astimezone(to_zone)
+
+        return local.strftime('%H:%M:%S')
+
     def _processRow(self, row, rowid, prev):
         """Process line in LOG file and create a new point feature based on this line.
 
@@ -339,23 +355,6 @@ class SafecastLayer(QgsVectorLayer):
             if ne in ('S', 'W'):
                 val *= -1
             return val
-
-        def datetime2localtime(datetime_value):
-            """Convert datetime value to local time.
-
-            :datetime_value: date time value (eg. '2016-05-16T18:22:26Z')
-
-            :return: local time as a string (eg. '20:22:26')
-            """
-            from_zone = tz.tzutc()
-            to_zone = tz.tzlocal()
-
-            utc = datetime.strptime(datetime_value, '%Y-%m-%dT%H:%M:%SZ')
-            utc = utc.replace(tzinfo=from_zone)
-            local = utc.astimezone(to_zone)
-
-            return local.strftime('%H:%M:%S')
-
 
         if len(row) != self._validNumAttrbs:
             raise SafecastReaderError(self.tr("Failed to read input data. Line: {}").format(','.join(row)))
@@ -409,12 +408,8 @@ class SafecastLayer(QgsVectorLayer):
         # update statistics
         self._updateStats(ader)
 
-        # compute local time (from datetime)
-        try:
-            time_local = datetime2localtime(row[3])
-        except ValueError:
-            time_local = self.tr("unknown")
-        row.insert(1, time_local)
+        # local time will be calculated after loading whole file
+        row.insert(1, None)
 
         # speed will be calculated after loading whole file
         row.insert(2, None)
@@ -424,9 +419,6 @@ class SafecastLayer(QgsVectorLayer):
         row.insert(4, None)
         row.insert(5, None)
 
-        # update plot data
-        self._plot.append((time_local, ader))
-        
         # create new feature
         fet = QgsFeature()
         fet.setGeometry(QgsGeometry.fromPoint(point))
@@ -589,6 +581,7 @@ class SafecastLayer(QgsVectorLayer):
         time_cum_idx = self.fieldNameIndex("time_cumulative")
         dose_cum_idx = self.fieldNameIndex("dose_cumulative")
         speed_idx = self.fieldNameIndex("speed_kmph")
+        time_local_idx = self.fieldNameIndex("time_local")
         datetime_idx = self.fieldNameIndex("date_time")
 
         prev = None     # previous feature
@@ -624,6 +617,15 @@ class SafecastLayer(QgsVectorLayer):
             feat_datetime = feat.attribute("date_time")
             # fix date if invalid
             feat_datetime, newdt = self._validateDate(feat_datetime, prev_datetime, first_valid_date)
+
+            # compute local time (from datetime)
+            try:
+                time_local = self._datetime2localtime(feat_datetime)
+                # update plot data
+                self._plot.append((time_local, feat.attribute("ader_microsvh")))
+            except ValueError:
+                time_local = self.tr("unknown")
+
             if prev:
                 timediff = self._datetimediff(
                     prev_datetime,
@@ -659,6 +661,7 @@ class SafecastLayer(QgsVectorLayer):
                       ).strftime("%H:%M:%S"),
                       dose_cum_idx: dose_cum,
                       speed_idx: speed,
+                      time_local_idx: time_local,
             }
             if newdt:
                 attrs[datetime_idx] = feat_datetime
