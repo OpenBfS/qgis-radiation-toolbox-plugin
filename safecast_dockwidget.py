@@ -551,11 +551,14 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             return
 
         stats = layer.stats()
-        data = [(self.tr("Measured points"), "{0:d}".format(stats['count'])),
+        data = [(self.tr("Measured points"), "{0:d}".format(stats['count']))]
+        if stats['count'] > 0:
+            data += [
                 (self.tr("ADER Min (microSv/h)"),   "{0:.2f}".format(stats['min'])),
                 (self.tr("ADER Max (microSv/h)"),   "{0:.2f}".format(stats['max'])),
                 (self.tr("ADER Sum (microSv/h)"),   "{0:.2f}".format(stats['sum'])),
-                (self.tr("ADER Mean (microSv/h)"),  "{0:.2f}".format(stats['mean']))]
+                (self.tr("ADER Mean (microSv/h)"),  "{0:.2f}".format(stats['mean']))
+            ]
 
         self.groupStats.setTitle(self.tr("Layer statistics - {}").format(layer.name()))
         self._statsWidget.setRowCount(len(data))
