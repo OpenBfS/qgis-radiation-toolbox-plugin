@@ -77,10 +77,16 @@ class SafecastLayer(QgsVectorLayer):
         self._distance.setEllipsoid('WGS84')
 
         # define attributes
+
+        # setting up precision causes in QGIS 2 problems when exporing
+        # data into other formats, see
+        # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
         attrbs = [
-            QgsField("ader_microsvh", QVariant.Double, prec=4),
+            # QgsField("ader_microsvh", QVariant.Double, prec=4),
+            QgsField("ader_microsvh", QVariant.Double),
             QgsField("time_local", QVariant.String),
-            QgsField("speed_kmph", QVariant.Double, prec=2),
+            # QgsField("speed_kmph", QVariant.Double, prec=2),
+            QgsField("speed_kmph", QVariant.Double),
             QgsField("dose_increment", QVariant.Double),
             QgsField("time_cumulative", QVariant.String),
             QgsField("dose_cumulative", QVariant.Double),
@@ -404,7 +410,11 @@ class SafecastLayer(QgsVectorLayer):
             ader *= 0.0029940119760479
         except ValueError:
             ader = -1
-        row.insert(0, ader)
+        # workaround: setting up precision causes in QGIS 2
+        # problems when exporing data into other formats, see
+        # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
+        row.insert(0, float('{0:.4f}'.format(ader)))
+
         # update statistics
         self._updateStats(ader)
 
@@ -639,8 +649,11 @@ class SafecastLayer(QgsVectorLayer):
                     feat.geometry().asPoint(),
                     prev.geometry().asPoint()
                 )
-                speed = (dist / 1e3) / timediff # kmph
 
+                # workaround: setting up precision causes in QGIS 2
+                # problems when exporing data into other formats, see
+                # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
+                speed = float('{0:.2f}'.format((dist / 1e3) / timediff)) # kmph
                 # time cumulative
                 time_cum += timediff
 
