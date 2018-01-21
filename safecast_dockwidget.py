@@ -23,10 +23,12 @@
 import os
 import sys
 import logging
+from collections import OrderedDict
+from datetime import datetime, timedelta
 
 from PyQt4 import QtGui, uic
 from PyQt4.QtGui import QFileDialog, QMessageBox, QToolBar, QGridLayout, QLabel, \
-    QSpacerItem, QSizePolicy, QTableWidget
+    QSpacerItem, QSizePolicy
 from PyQt4.QtCore import QSignalMapper, SIGNAL, SLOT, pyqtSignal, QSettings
 
 from qgis.core import QgsMapLayerRegistry, QgsProject, QgsRasterLayer
@@ -35,6 +37,7 @@ from qgis.utils import iface
 
 from .reader import SafecastReader, SafecastReaderError, SafecastReaderLogger
 from .safecast_layer import SafecastLayer, SafecastWriterError
+from .safecast_stats import SafecastStats
 try:
     from .safecast_plot import SafecastPlot
     plotMsg = None
@@ -161,13 +164,8 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             self._statsLayout = QGridLayout(self.groupStats)
 
         if not hasattr(self, "_statsWidget"):
-            self._statsWidget = QTableWidget(self.groupStats)
-            self._statsWidget.setShowGrid(False)
-            self._statsWidget.horizontalHeader().setStretchLastSection(True)
-            self._statsWidget.horizontalHeader().hide()
-            self._statsWidget.verticalHeader().hide()
-            self._statsWidget.setColumnCount(2)
-            self._statsWidget.setVisible(False)
+            self._statsWidget = SafecastStats(self.groupStats)
+            self._statsWidget.setHeaderHidden(True)
 
         if not hasattr(self, "_statsLabel"):
             self._statsLabel = QLabel(
@@ -552,22 +550,24 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         stats = layer.stats()
         data = [(self.tr("Measured points"), "{0:d}".format(stats['count']))]
-        if stats['count'] > 0:
-            data += [
-                (self.tr("ADER Min (microSv/h)"),   "{0:.2f}".format(stats['min'])),
-                (self.tr("ADER Max (microSv/h)"),   "{0:.2f}".format(stats['max'])),
-                (self.tr("ADER Sum (microSv/h)"),   "{0:.2f}".format(stats['sum'])),
-                (self.tr("ADER Mean (microSv/h)"),  "{0:.2f}".format(stats['mean']))
-            ]
+        if stats['count'] <= 0:
+            self._statsWidget.clear()
 
         self.groupStats.setTitle(self.tr("Layer statistics - {}").format(layer.name()))
-        self._statsWidget.setRowCount(len(data))
-        row = 0
-        for items in data:
-            self._statsWidget.setItem(row, 0, QtGui.QTableWidgetItem("{}:".format(items[0])))
-            self._statsWidget.setItem(row, 1, QtGui.QTableWidgetItem(items[1]))
-            row += 1
-        self._statsWidget.resizeColumnsToContents()
+        self._statsWidget.setData(OrderedDict([
+            (self.tr('Route information'), [
+                (self.tr('average speed (km/h)'), '{0:.1f}'.format(stats['route']['speed'])),
+                (self.tr('total monitoring time'),
+                 (datetime(2000,1,1) + timedelta(hours=stats['route']['time'])).strftime("%H:%M:%S"),
+                ),
+                (self.tr('total distance (km)'), '{0:.3f}'.format(stats['route']['distance'] / 1000)),
+            ]),
+            (self.tr('Radiation values'), [
+                (self.tr('maximum dose rate (microSv/h)'), '{0:.3f}'.format(stats['radiation']['max'])),
+                (self.tr('average dose rate (microSv/h)'), '{0:.3f}'.format(stats['radiation']['avg'])),
+                (self.tr('total dose (microSv)'), '{0:.3f}'.format(stats['radiation']['total'])),
+            ]),
+        ]))
 
     def updatePlot(self, layer):
         """Update plot for currently selected safecast layer.

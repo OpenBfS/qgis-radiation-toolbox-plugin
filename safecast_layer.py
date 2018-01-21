@@ -59,11 +59,19 @@ class SafecastLayer(QgsVectorLayer):
         self._storageFormat = storageFormat
 
         # ader statistics
-        self._stats = { 'min': None,
-                        'max': None,
-                        'count': 0,
-                        'sum': 0,
-                        'mean': None }
+        self._stats = {
+            'count' : 0,
+            'radiation': {
+                'max' : None,
+                'avg' : None,
+                'total': None,
+            },
+            'route': {
+                'speed' : None,
+                'time': None,
+                'distance' : None,
+            }
+        }
 
         # ader plot
         self._plot = []
@@ -415,9 +423,6 @@ class SafecastLayer(QgsVectorLayer):
         # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
         row.insert(0, float('{0:.4f}'.format(ader)))
 
-        # update statistics
-        self._updateStats(ader)
-
         # local time will be calculated after loading whole file
         row.insert(1, None)
 
@@ -484,18 +489,12 @@ class SafecastLayer(QgsVectorLayer):
             os.path.basename(self._fileName)
         )[0]
 
-    def _updateStats(self, value):
+    def _updateStats(self, data):
         """Update ader statistics.
 
         :param ader: ader statistics
         """
-        if self._stats['min'] is None or self._stats['min'] > value:
-            self._stats['min'] = value
-        if self._stats['max'] is None or self._stats['max'] < value:
-            self._stats['max'] = value
-        self._stats['sum'] += value
-        self._stats['count'] += 1
-        self._stats['mean'] = self._stats['sum'] / self._stats['count']
+        self._stats = data
 
     def stats(self):
         """Get layer statistics"""
@@ -601,6 +600,7 @@ class SafecastLayer(QgsVectorLayer):
         dose_cum = None
         timediff = None
         speed = None
+        count = 0
 
         # fix first valid datetime
         first_valid_date = None
@@ -623,16 +623,27 @@ class SafecastLayer(QgsVectorLayer):
 
         prev_datetime = None
         iter = self.getFeatures()
+
+        ader_max = None
+        ader_cum = 0
+        speed_cum = 0
+        dist_cum = 0
         for feat in iter:
             feat_datetime = feat.attribute("date_time")
             # fix date if invalid
             feat_datetime, newdt = self._validateDate(feat_datetime, prev_datetime, first_valid_date)
 
+            # compute ader stats
+            ader = feat.attribute("ader_microsvh")
+            if ader_max is None or ader_max < ader:
+                ader_max = ader
+            ader_cum += ader
+
             # compute local time (from datetime)
             try:
                 time_local = self._datetime2localtime(feat_datetime)
                 # update plot data
-                self._plot.append((time_local, feat.attribute("ader_microsvh")))
+                self._plot.append((time_local, ader))
             except ValueError:
                 time_local = self.tr("unknown")
 
@@ -642,18 +653,21 @@ class SafecastLayer(QgsVectorLayer):
                     feat_datetime
                 ).total_seconds() / (60 * 60)
 
-                dose_inc = feat.attribute("ader_microsvh") * timediff
+                dose_inc = ader * timediff
 
                 # speed
                 dist = self._distance.measureLine(
                     feat.geometry().asPoint(),
                     prev.geometry().asPoint()
                 )
+                dist_cum += dist
 
                 # workaround: setting up precision causes in QGIS 2
                 # problems when exporing data into other formats, see
                 # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
                 speed = float('{0:.2f}'.format((dist / 1e3) / timediff)) # kmph
+                speed_cum += speed
+
                 # time cumulative
                 time_cum += timediff
 
@@ -682,8 +696,23 @@ class SafecastLayer(QgsVectorLayer):
             self._provider.changeAttributeValues(
                 { feat.id() : attrs }
             )
+            count += 1
 
         # save changes
         self.commitChanges()
+
+        self._updateStats({
+            'count' : count,
+            'radiation': {
+                'max' : ader_max,
+                'avg' : ader_cum / count,
+                'total': dose_cum,
+            },
+            'route': {
+                'speed' : speed_cum / count,
+                'time': time_cum,
+                'distance' : dist_cum,
+            }
+        })
 
         self._provider.forceReload()
