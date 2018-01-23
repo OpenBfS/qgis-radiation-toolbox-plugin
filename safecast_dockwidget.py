@@ -76,7 +76,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self._createToolbarAndConnect()
 
         # generic connects
-        iface.legendInterface().currentLayerChanged.connect(self.updateStatsPlot)
+        iface.currentLayerChanged.connect(self.updateStatsPlot)
 
         # load internal styles
         self._initStyles()
@@ -486,7 +486,9 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                 iface.actionDeleteSelected().trigger()
                 iface.actionSaveActiveLayerEdits().trigger()
                 iface.actionToggleEditing().trigger()
+                # better would to handle such issues by triggers
                 layer.recalculateAttributes()
+                self.updateStatsPlot(layer)
                 layer.setReadOnly(True)
         else:
             # inform user - no features selected, nothing to be deleted
