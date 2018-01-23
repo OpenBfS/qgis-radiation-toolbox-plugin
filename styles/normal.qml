@@ -1,71 +1,6 @@
 <!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
 <qgis version="2.18.14" simplifyAlgorithm="0" minimumScale="0" maximumScale="1e+08" simplifyDrawingHints="0" minLabelScale="0" maxLabelScale="1e+08" simplifyDrawingTol="1" readOnly="1" simplifyMaxScale="1" hasScaleBasedVisibilityFlag="0" simplifyLocal="1" scaleBasedLabelVisibilityFlag="0">
-  <edittypes>
-    <edittype widgetv2type="TextEdit" name="ader_microsvh">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="dose_increment">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="dose_cumulative">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="time_local">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="speed_kmph">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="device">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="device_id">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="date_time">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="cpm">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="pulses5s">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="pulses_total">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="validity">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="lat_deg">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="hemisphere">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="long_deg">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="east_west">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="altitude">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="gps_validity">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="sat">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="hdop">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-    <edittype widgetv2type="TextEdit" name="checksum">
-      <widgetv2config IsMultiline="0" fieldEditable="1" constraint="" UseHtml="0" labelOnTop="0" constraintDescription="" notNull="0"/>
-    </edittype>
-  </edittypes>
-  <renderer-v2 attr="ADER_microSvh" forceraster="0" symbollevels="0" type="graduatedSymbol" graduatedMethod="GraduatedColor" enableorderby="0">
+  <renderer-v2 attr="ader_microSvh" forceraster="0" symbollevels="0" type="graduatedSymbol" graduatedMethod="GraduatedColor" enableorderby="0">
     <ranges>
       <range render="true" symbol="0" lower="0.000000000000000" upper="0.080000000000000" label="&lt; 0.08"/>
       <range render="true" symbol="1" lower="0.080000000000000" upper="0.100000000000000" label="0.08 - 0.10"/>
@@ -535,58 +470,9 @@
   </SingleCategoryDiagramRenderer>
   <DiagramLayerSettings yPosColumn="-1" showColumn="0" linePlacementFlags="10" placement="0" dist="0" xPosColumn="-1" priority="0" obstacle="0" zIndex="0" showAll="1"/>
   <annotationform>.</annotationform>
-  <aliases>
-    <alias field="ader_microsvh" index="0" name="ADER (microSv/h)"/>
-    <alias field="dose_increment" index="1" name="Increment DOSE"/>
-    <alias field="dose_cumulative" index="2" name="Cumulative DOSE"/>
-    <alias field="time_local" index="3" name="Local time"/>
-    <alias field="speed_kmph" index="4" name="Speed (km/h)"/>
-    <alias field="device" index="5" name="Device"/>
-    <alias field="device_id" index="6" name="Device ID"/>
-    <alias field="date_time" index="7" name="Datetime"/>
-    <alias field="cpm" index="8" name="CPM"/>
-    <alias field="pulses5s" index="9" name="Pulses 5sec"/>
-    <alias field="pulses_total" index="10" name="Pulses total"/>
-    <alias field="validity" index="11" name="Validity"/>
-    <alias field="lat_deg" index="12" name="Latitude (deg)"/>
-    <alias field="hemisphere" index="13" name="Hemisphere"/>
-    <alias field="long_deg" index="14" name="Longitude (deg)"/>
-    <alias field="east_west" index="15" name="East/West"/>
-    <alias field="altitude" index="16" name="Altitude"/>
-    <alias field="gps_validity" index="17" name="GPS Validity"/>
-    <alias field="sat" index="18" name="Sat"/>
-    <alias field="hdop" index="19" name="HDOP"/>
-    <alias field="checksum" index="20" name="CheckSum"/>
-  </aliases>
   <excludeAttributesWMS/>
   <excludeAttributesWFS/>
   <attributeactions default="-1"/>
-  <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="0">
-    <columns>
-      <column width="-1" hidden="0" type="field" name="ader_microsvh"/>
-      <column width="-1" hidden="0" type="field" name="dose_increment"/>
-      <column width="-1" hidden="0" type="field" name="dose_cumulative"/>
-      <column width="-1" hidden="0" type="field" name="time_local"/>
-      <column width="-1" hidden="0" type="field" name="speed_kmph"/>
-      <column width="-1" hidden="0" type="field" name="device"/>
-      <column width="-1" hidden="0" type="field" name="device_id"/>
-      <column width="-1" hidden="0" type="field" name="date_time"/>
-      <column width="-1" hidden="0" type="field" name="cpm"/>
-      <column width="-1" hidden="0" type="field" name="pulses5s"/>
-      <column width="-1" hidden="0" type="field" name="pulses_total"/>
-      <column width="-1" hidden="0" type="field" name="validity"/>
-      <column width="-1" hidden="0" type="field" name="lat_deg"/>
-      <column width="-1" hidden="0" type="field" name="hemisphere"/>
-      <column width="-1" hidden="0" type="field" name="long_deg"/>
-      <column width="-1" hidden="0" type="field" name="east_west"/>
-      <column width="-1" hidden="0" type="field" name="altitude"/>
-      <column width="-1" hidden="0" type="field" name="gps_validity"/>
-      <column width="-1" hidden="0" type="field" name="sat"/>
-      <column width="-1" hidden="0" type="field" name="hdop"/>
-      <column width="-1" hidden="0" type="field" name="checksum"/>
-      <column width="-1" hidden="1" type="actions"/>
-    </columns>
-  </attributetableconfig>
   <editform>.</editform>
   <editforminit/>
   <editforminitcodesource>0</editforminitcodesource>
@@ -615,29 +501,6 @@ def my_form_open(dialog, layer, feature):
     <rowstyles/>
     <fieldstyles/>
   </conditionalstyles>
-  <defaults>
-    <default field="ader_microsvh" expression=""/>
-    <default field="dose_increment" expression=""/>
-    <default field="dose_cumulative" expression=""/>
-    <default field="time_local" expression=""/>
-    <default field="speed_kmph" expression=""/>
-    <default field="device" expression=""/>
-    <default field="device_id" expression=""/>
-    <default field="date_time" expression=""/>
-    <default field="cpm" expression=""/>
-    <default field="pulses5s" expression=""/>
-    <default field="pulses_total" expression=""/>
-    <default field="validity" expression=""/>
-    <default field="lat_deg" expression=""/>
-    <default field="hemisphere" expression=""/>
-    <default field="long_deg" expression=""/>
-    <default field="east_west" expression=""/>
-    <default field="altitude" expression=""/>
-    <default field="gps_validity" expression=""/>
-    <default field="sat" expression=""/>
-    <default field="hdop" expression=""/>
-    <default field="checksum" expression=""/>
-  </defaults>
   <previewExpression></previewExpression>
   <layerGeometryType>0</layerGeometryType>
 </qgis>
