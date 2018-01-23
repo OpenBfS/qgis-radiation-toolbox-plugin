@@ -107,9 +107,9 @@ class SafecastPlot(Qwt.QwtPlot):
         yaxis = SafecastAxis(Qwt.QwtPlot.yLeft, Qwt.QwtPlot.xBottom)
         yaxis.attach(self)
         if hasQwt5:
-            self.setAxisTitle(Qwt.QwtPlot.yLeft, self.tr("ADER [microSv/h]"))
+            self.setAxisTitle(Qwt.QwtPlot.yLeft, self.tr("ADER (microSv/h)"))
         else:
-            self.setAxisTitle(Qwt.QwtPlot.yLeft, self.tr("ADER [microSv/h]"))
+            self.setAxisTitle(Qwt.QwtPlot.yLeft, self.tr("ADER (microSv/h)"))
 
     def update(self, layer, style):
         """Update plot for given Safecast layer.
