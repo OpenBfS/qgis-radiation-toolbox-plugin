@@ -483,13 +483,17 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
             if reply == QtGui.QMessageBox.Yes:
                 # delete selected features from currently selected layer
+                iface.messageBar().pushMessage(
+                    self.tr("Info"),
+                    self.tr("Updating attributes..."),
+                    level=QgsMessageBar.INFO,
+                    duration=3
+                )
                 layer.setReadOnly(False)
                 iface.actionToggleEditing().trigger()
                 iface.actionDeleteSelected().trigger()
                 iface.actionSaveActiveLayerEdits().trigger()
                 iface.actionToggleEditing().trigger()
-                # better would to handle such issues by triggers
-                layer.recalculateAttributes()
                 self.updateStatsPlot(layer)
                 layer.setReadOnly(True)
         else:

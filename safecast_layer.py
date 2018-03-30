@@ -136,6 +136,9 @@ class SafecastLayer(QgsVectorLayer):
         self._provider.addAttributes(attrbs)
         self.updateFields()
 
+        # connects
+        self.beforeCommitChanges.connect(self.recalculateAttributes)
+
         # layer is empty, no data loaded
         self._loaded = False
 
@@ -221,11 +224,8 @@ class SafecastLayer(QgsVectorLayer):
                 percent = i / float(count) * 100
                 progress.setValue(percent)
 
-        # add features
+        # add features (attributes recalculated)
         self.commitChanges()
-
-        # recalculate attributes for all features (dose, speed, ...)
-        self.recalculateAttributes()
 
         if self._errs:
             # report errors if any
@@ -570,13 +570,9 @@ class SafecastLayer(QgsVectorLayer):
         ), True
 
     def recalculateAttributes(self):
-        """Update layer after adding.
-
-        Recalculate:
-         - dose (increment, cumulative)
-         - speed
+        """Update attributes after loading or editing.
         """
-        # TODO: find better approach
+        # skip FID column for SQLite storage
         idx = 1 if check_version() and self._storageFormat == "ogr" else 0
 
         dose_inc_idx = self.fieldNameIndex("dose_increment")
@@ -612,7 +608,8 @@ class SafecastLayer(QgsVectorLayer):
                 duration=5
             )
 
-        self.startEditing()
+        # not needed, called before changes are commited
+        ## self.startEditing()
 
         prev_datetime = None
         iter = self.getFeatures()
@@ -686,14 +683,16 @@ class SafecastLayer(QgsVectorLayer):
             if newdt:
                 attrs[datetime_idx] = feat_datetime
 
-            self._provider.changeAttributeValues(
-                { feat.id() : attrs }
-            )
+            for idx, value in attrs.items():
+                self.changeAttributeValue(feat.id(), idx, value)
+
             count += 1
 
         # save changes
-        self.commitChanges()
+        # not needed, called before changes are commited
+        ## self.commitChanges()
 
+        # update layer internal statistics
         self._updateStats({
             'count' : count,
             'radiation': {
@@ -708,4 +707,5 @@ class SafecastLayer(QgsVectorLayer):
             }
         })
 
+        # force reload attributes
         self._provider.forceReload()
