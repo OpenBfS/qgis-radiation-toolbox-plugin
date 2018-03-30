@@ -4,7 +4,7 @@
                              ----------------------
         begin                : 2016-05-25
         git sha              : $Format:%H$
-        copyright            : (C) 2016-2017 by OpenGeoLabs s.r.o.
+        copyright            : (C) 2016-2018 by OpenGeoLabs s.r.o.
         acknowledgement      : Suro, Czech Republic
         email                : martin.landa@opengeolabs.cz
  ***************************************************************************/
