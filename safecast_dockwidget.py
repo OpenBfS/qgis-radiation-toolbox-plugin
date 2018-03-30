@@ -314,6 +314,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             # load data by reader into new layer and set style
             layer.load(reader)
             layer.loadNamedStyle(self.stylePath())
+            layer.setAliases() # loadNameStyle removes aliases (why?)
             # add map layer to the canvas (do not add into TOC)
             QgsMapLayerRegistry.instance().addMapLayer(layer, False)
             # force register layer in TOC as a first item
@@ -375,6 +376,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         # apply new style on currently selected layer
         try:
             layer.loadNamedStyle(self.stylePath())
+            layer.setAliases() # loadNameStyle removes aliases (why?)
         except SafecastError as e:
             # print error message on failure
             QMessageBox.critical(None, self.tr("Error"),

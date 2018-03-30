@@ -127,35 +127,10 @@ class SafecastLayer(QgsVectorLayer):
         self._validNumAttrbs = len(attrbs) - (self._skipNumAttrbs + 1)
 
         # create point layer (WGS-84, EPSG:4326)
-        layerName = os.path.splitext(os.path.basename(self._fileName))[0]
-        if self._storageFormat == "ogr":
-            from osgeo import ogr, osr
-            filePath = os.path.splitext(self._fileName)[0] + '.sqlite'
-            fileName = "{}|layername={}|geometrytype=Point".format(
-                filePath, layerName
-            )
-
-            # rewrite output DB if exists
-            if os.path.exists(filePath):
-                os.remove(filePath)
-
-            # new DB with empty layer must be created before reading
-            # layer
-            driver = ogr.GetDriverByName("SQLite")
-            dataSource = driver.CreateDataSource(filePath)
-            srs = osr.SpatialReference()
-            srs.ImportFromEPSG(4326)
-            layer = dataSource.CreateLayer(str(layerName), srs, ogr.wkbPoint)
-            dataSource = None # write changes
-        else:
-            fileName = 'Point?crs=epsg:4326'
-        super(SafecastLayer, self).__init__(fileName, layerName, self._storageFormat)
+        self._layerName = os.path.splitext(os.path.basename(self._fileName))[0]
+        super(SafecastLayer, self).__init__('Point?crs=epsg:4326', self._layerName, "memory")
 
         self._provider = self.dataProvider()
-
-        # set aliases when running QGIS 2.18+
-        if check_version():
-            self._setAliases(attrbs)
 
         # set attributes
         self._provider.addAttributes(attrbs)
@@ -164,12 +139,10 @@ class SafecastLayer(QgsVectorLayer):
         # layer is empty, no data loaded
         self._loaded = False
 
-    def _setAliases(self, attrbs):
+    def setAliases(self):
         """Set aliases
-
-        :params attrbs: list of QgsField instances
         """
-        alias = [
+        aliases = [
             self.tr("ADER (microSv/h)"),
             self.tr("Local time"),
             self.tr("Speed (km/h)"),
@@ -193,10 +166,11 @@ class SafecastLayer(QgsVectorLayer):
             self.tr("HDOP"),
             self.tr("CheckSum")
         ]
-        i = 0
-        for field in attrbs:
-            field.setAlias(alias[i])
-            i += 1
+        if self._storageFormat == "ogr":
+            aliases.insert(0, self.tr("FID"))
+
+        for i in range(0, len(aliases)):
+            self.addAttributeAlias(i, aliases[i])
 
     def load(self, reader):
         """Load LOG file using specified reader.
@@ -249,22 +223,9 @@ class SafecastLayer(QgsVectorLayer):
 
         # add features
         self.commitChanges()
-        # self._provider.addFeatures(feats)
 
         # recalculate attributes for all features (dose, speed, ...)
         self.recalculateAttributes()
-
-        endtime = time.clock() - start
-        progress.setValue(100)
-        iface.messageBar().clearWidgets()
-
-        # inform user about successful import
-        iface.messageBar().pushMessage(
-            self.tr("Info"),
-            self.tr("{} features loaded (in {:.2f} sec).").format(self._stats['count'], endtime),
-            level=QgsMessageBar.INFO,
-            duration=3
-        )
 
         if self._errs:
             # report errors if any
@@ -285,10 +246,46 @@ class SafecastLayer(QgsVectorLayer):
                     level=QgsMessageLog.WARNING
                 )
 
+        if self._storageFormat == "ogr":
+            # write data into SQLite DB
+            self._writeToSQLite()
+            self.reload()
+
+        # finish import
+        endtime = time.clock() - start
+        progress.setValue(100)
+        iface.messageBar().clearWidgets()
+
+        # inform user about successful import
+        iface.messageBar().pushMessage(
+            self.tr("Info"),
+            self.tr("{} features loaded (in {:.2f} sec).").format(self._stats['count'], endtime),
+            level=QgsMessageBar.INFO,
+            duration=3
+        )
+
         # data loaded (avoid multiple imports)
         self._loaded = True
+
         # switch to read-only mode
         self.setReadOnly(True)
+
+    def _writeToSQLite(self):
+        filePath = os.path.splitext(self._fileName)[0] + '.sqlite'
+        writer = QgsVectorFileWriter.writeAsVectorFormat(
+            self,
+            filePath,
+            self._provider.encoding(),
+            self._provider.crs(),
+            "SQLite"
+        )
+        # TODO: QgsVectorFileWriter.WriterError
+        if writer != 0:
+            raise SafecastReaderError(self.tr("Unable to create SQLite datasource"))
+
+        # set datasource to SQLite DB
+        self.setDataSource(filePath, self._layerName, self._storageFormat)
+        self._provider = self.dataProvider()
 
     def _addError(self, etype):
         """Add error message.
@@ -437,10 +434,6 @@ class SafecastLayer(QgsVectorLayer):
         # create new feature
         fet = QgsFeature()
         fet.setGeometry(QgsGeometry.fromPoint(point))
-
-        if check_version() and self._storageFormat == "ogr":
-            # force feature id (fix SQLite issue)
-            row.insert(0, rowid)
 
         # set attributes
         fet.setAttributes(row)
