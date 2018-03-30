@@ -28,7 +28,7 @@ from datetime import datetime, timedelta
 
 from PyQt4 import QtGui, uic
 from PyQt4.QtGui import QFileDialog, QMessageBox, QToolBar, QGridLayout, QLabel, \
-    QSpacerItem, QSizePolicy
+    QSpacerItem, QSizePolicy, QAction
 from PyQt4.QtCore import QSignalMapper, SIGNAL, SLOT, pyqtSignal, QSettings
 
 from qgis.core import QgsMapLayerRegistry, QgsProject, QgsRasterLayer
@@ -75,8 +75,12 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         # connect ui with functions
         self._createToolbarAndConnect()
 
+        # actions
+        self.actionUpdateStatsPlot = QAction("UpdateStatsPlot", self)
+
         # generic connects
-        iface.currentLayerChanged.connect(self.updateStatsPlot)
+        iface.currentLayerChanged.connect(self.onUpdateStatsPlot)
+        self.actionUpdateStatsPlot.triggered.connect(self.onUpdateStatsPlot)
 
         # load internal styles
         self._initStyles()
@@ -494,7 +498,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                 iface.actionDeleteSelected().trigger()
                 iface.actionSaveActiveLayerEdits().trigger()
                 iface.actionToggleEditing().trigger()
-                self.updateStatsPlot(layer)
+                self.actionUpdateStatsPlot.trigger()
                 layer.setReadOnly(True)
         else:
             # inform user - no features selected, nothing to be deleted
@@ -594,8 +598,10 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             groupTitle = self.tr("Plot")
         self.groupPlot.setTitle(groupTitle)
             
-    def updateStatsPlot(self, layer):
+    def onUpdateStatsPlot(self):
         """Update stats & plot for currently selected safecast layer.
         """
-        self.updateStats(layer)
-        self.updatePlot(layer)
+        layer = iface.activeLayer()
+        if layer:
+            self.updateStats(layer)
+            self.updatePlot(layer)
