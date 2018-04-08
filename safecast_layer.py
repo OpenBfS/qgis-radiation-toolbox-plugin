@@ -572,6 +572,18 @@ class SafecastLayer(QgsVectorLayer):
     def recalculateAttributes(self):
         """Update attributes after loading or editing.
         """
+        def td2str(td):
+            """Convert timedelta objects to a HH:MM string with (+/-) sign
+
+            Taken from: https://stackoverflow.com/questions/538666/python-format-timedelta-to-string
+            """
+            tdhours, rem = divmod(td.total_seconds(), 3600)
+            tdminutes, rem = divmod(rem, 60)
+
+            return '{0:02d}:{1:02d}:{2:02d}'.format(
+                int(tdhours), int(tdminutes), int(rem)
+            )
+
         # skip FID column for SQLite storage
         idx = 1 if check_version() and self._storageFormat == "ogr" else 0
 
@@ -673,9 +685,7 @@ class SafecastLayer(QgsVectorLayer):
 
             # update attributes
             attrs = { dose_inc_idx: dose_inc,
-                      time_cum_idx: (
-                          datetime(2000,1,1) + timedelta(hours=time_cum)
-                      ).strftime("%H:%M:%S"),
+                      time_cum_idx: td2str(timedelta(hours=time_cum)),
                       dose_cum_idx: dose_cum,
                       speed_idx: speed,
                       time_local_idx: time_local,
