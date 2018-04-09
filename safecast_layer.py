@@ -290,6 +290,9 @@ class SafecastLayer(QgsVectorLayer):
         self.setDataSource(filePath, self._layerName, self._storageFormat)
         self._provider = self.dataProvider()
 
+        # ignore also FID column
+        self._skipNumAttrbs += 1
+
     def _addError(self, etype):
         """Add error message.
 
