@@ -57,6 +57,7 @@ class SafecastLayer(QgsVectorLayer):
         """
         self._fileName = fileName
         self._storageFormat = storageFormat
+        self._layerName = os.path.splitext(os.path.basename(self._fileName))[0]
 
         # ader statistics
         self._stats = {
@@ -127,7 +128,6 @@ class SafecastLayer(QgsVectorLayer):
         self._validNumAttrbs = len(attrbs) - (self._skipNumAttrbs + 1)
 
         # create point layer (WGS-84, EPSG:4326)
-        self._layerName = os.path.splitext(os.path.basename(self._fileName))[0]
         super(SafecastLayer, self).__init__('Point?crs=epsg:4326', self._layerName, "memory")
 
         self._provider = self.dataProvider()
@@ -135,6 +135,9 @@ class SafecastLayer(QgsVectorLayer):
         # set attributes
         self._provider.addAttributes(attrbs)
         self.updateFields()
+
+        # metadata
+        self.setAttribution('Safecast plugin')
 
         # connects
         self.beforeCommitChanges.connect(self.recalculateAttributes)

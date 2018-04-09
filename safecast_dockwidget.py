@@ -552,11 +552,9 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         :param layer: current layer
         """
-        safecast_layer = layer and isinstance(layer, SafecastLayer)
-
         # attach stats widget if doesn't exist
+        safecast_layer = self._checkSafecastLayer(layer)
         self._initStats(safecast_layer)
-
         if not safecast_layer:
             return
 
@@ -587,7 +585,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         :param layer: current layer
         """
         # attach plot widget if doesn't exist
-        self._initPlot(layer and isinstance(layer, SafecastLayer) and not plotMsg)
+        self._initPlot(self._checkSafecastLayer(layer) and not plotMsg)
 
         # update plot curve
         if self._plotVisible:
@@ -602,6 +600,21 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         """Update stats & plot for currently selected safecast layer.
         """
         layer = iface.activeLayer()
-        if layer:
-            self.updateStats(layer)
-            self.updatePlot(layer)
+        if not layer:
+            return
+
+        self.updateStats(layer)
+        self.updatePlot(layer)
+
+    def _checkSafecastLayer(self, layer):
+        """Check if current map layer is managable by Safecast plugin.
+        """
+        if not layer:
+            return False
+
+        if isinstance(layer, SafecastLayer):
+            # map layer loaded by Safecast plugin
+            return True
+
+        # TODO: provide better check
+        return layer.attribution() == 'Safecast plugin'
