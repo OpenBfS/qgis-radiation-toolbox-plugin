@@ -36,7 +36,7 @@ from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
 from .reader import SafecastReader, SafecastReaderError, SafecastReaderLogger
-from .safecast_layer import SafecastLayer, SafecastWriterError
+from .safecast_layer import SafecastLayer, SafecastWriterError, SafecastLayerHelper
 from .safecast_stats import SafecastStats
 try:
     from .safecast_plot import SafecastPlot
@@ -92,7 +92,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         # list of layers (must be defined, otherwise SafecastLayer is
         # not returned by getActiveLayer()
-        self._layers = []
+        self._layers = {}
 
         # settings
         self._settings = QSettings()
@@ -315,10 +315,16 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             reader = SafecastReader(filePath)
             # create new QGIS map layer (read-only)
             layer = SafecastLayer(filePath, storageFormat)
+            # register new layer in plugin's internal list
+            # helper must be assigned before loading data (!)
+            self._layers[layer.id()] = SafecastLayerHelper(layer)
+
             # load data by reader into new layer and set style
             layer.load(reader)
+            # set style
             layer.loadNamedStyle(self.stylePath())
             layer.setAliases() # loadNameStyle removes aliases (why?)
+
             # add map layer to the canvas (do not add into TOC)
             QgsMapLayerRegistry.instance().addMapLayer(layer, False)
             # force register layer in TOC as a first item
@@ -328,8 +334,6 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             iface.legendInterface().setCurrentLayer(layer)
             # expand layer
             iface.legendInterface().setLayerExpanded(layer, True)
-            # register new layer in plugin's internal list
-            self._layers.append(layer)
         except (SafecastError, SafecastReaderError) as e:
             # show error message on failure
             iface.messageBar().clearWidgets()
@@ -432,7 +436,10 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         if layer:
             try:
                 # export layer to LOG file
-                layer.save(filePath)
+                helper = self._getLayerHelper(layer)
+                if not helper:
+                    raise SafecastWriterError(self.tr("Invalid Safecast layer"))
+                helper.save(filePath)
             except SafecastWriterError as e:
                 QMessageBox.critical(None, self.tr("Error"),
                                      self.tr("Failed to save LOG file: {0}").format(
@@ -547,21 +554,40 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         return layer
 
+    def _getLayerHelper(self, layer):
+        """Get Safecast helper class from selected layer.
+
+        :param: layer Safecast layer
+        """
+        try:
+            helper = self._layers[layer.id()]
+        except:
+            helper = None
+            iface.messageBar().pushMessage(self.tr("Warning"),
+                                           self.tr("Unable to retrieve Safecast data for selected layer"),
+                                           level=QgsMessageBar.WARNING, duration=5)
+        return helper
+
     def updateStats(self, layer):
         """Update statistics for currently selected safecast layer.
 
         :param layer: current layer
         """
         # attach stats widget if doesn't exist
-        safecast_layer = self._checkSafecastLayer(layer)
-        self._initStats(safecast_layer)
-        if not safecast_layer:
+        is_safecast_layer = self._checkSafecastLayer(layer)
+        self._initStats(is_safecast_layer)
+        if not is_safecast_layer:
             return
 
-        stats = layer.stats()
+        helper = self._getLayerHelper(layer)
+        if not helper:
+            return
+
+        stats = helper.stats()
         data = [(self.tr("Measured points"), "{0:d}".format(stats['count']))]
         if stats['count'] <= 0:
             self._statsWidget.clear()
+            return
 
         self.groupStats.setTitle(self.tr("Layer statistics - {}").format(layer.name()))
         self._statsWidget.setData(OrderedDict([
@@ -587,11 +613,15 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         # attach plot widget if doesn't exist
         self._initPlot(self._checkSafecastLayer(layer) and not plotMsg)
 
+        helper = self._getLayerHelper(layer)
+        if not helper:
+            return
+
         # update plot curve
         if self._plotVisible:
             groupTitle = self.tr("Layer plot - {}").format(layer.name())
             plotStyle = self.plotStyleCombo.currentIndex()
-            self._plotWidget.update(layer, plotStyle)
+            self._plotWidget.update(helper, plotStyle)
         else:
             groupTitle = self.tr("Plot")
         self.groupPlot.setTitle(groupTitle)
@@ -602,6 +632,12 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         layer = iface.activeLayer()
         if not layer:
             return
+
+        # layer loaded from project
+        if not isinstance(layer, SafecastLayer) and self._checkSafecastLayer(layer):
+            helper = SafecastLayerHelper(layer, storageFormat='ogr')
+            helper.computeStats()
+            self._layers[layer.id()] = helper
 
         self.updateStats(layer)
         self.updatePlot(layer)

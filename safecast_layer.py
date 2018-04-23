@@ -56,34 +56,12 @@ class SafecastLayer(QgsVectorLayer):
         :param storageFormat: storage format for layer (Memory or SQLite)
         """
         self._fileName = fileName
-        self._storageFormat = storageFormat
         self._layerName = os.path.splitext(os.path.basename(self._fileName))[0]
 
-        # ader statistics
-        self._stats = {
-            'count' : 0,
-            'radiation': {
-                'max' : None,
-                'avg' : None,
-                'total': None,
-            },
-            'route': {
-                'speed' : None,
-                'time': None,
-                'distance' : None,
-            }
-        }
-
-        # ader plot
-        self._plot = []
-
+        self.storageFormat = storageFormat
+        
         # import errors
         self._errs = {}
-
-        # create object for distance computation
-        self._distance = QgsDistanceArea()
-        self._distance.setEllipsoidalMode(True)
-        self._distance.setEllipsoid('WGS84')
 
         # define attributes
 
@@ -123,9 +101,9 @@ class SafecastLayer(QgsVectorLayer):
         # - dose_increment
         # - time_cumulative
         # - dose_cumulative
-        self._skipNumAttrbs = 6
+        self.skipNumAttrbs = 6
         # two last columns split (hdop + checksum)
-        self._validNumAttrbs = len(attrbs) - (self._skipNumAttrbs + 1)
+        self._validNumAttrbs = len(attrbs) - (self.skipNumAttrbs + 1)
 
         # create point layer (WGS-84, EPSG:4326)
         super(SafecastLayer, self).__init__('Point?crs=epsg:4326', self._layerName, "memory")
@@ -138,12 +116,11 @@ class SafecastLayer(QgsVectorLayer):
 
         # metadata
         self.setAttribution('Safecast plugin')
-
-        # connects
-        self.beforeCommitChanges.connect(self.recalculateAttributes)
+        self.setAttributionUrl('https://opengeolabs.github.io/qgis-safecast-plugin')
 
         # layer is empty, no data loaded
         self._loaded = False
+        self.metadata = None
 
     def setAliases(self):
         """Set aliases
@@ -172,7 +149,7 @@ class SafecastLayer(QgsVectorLayer):
             self.tr("HDOP"),
             self.tr("CheckSum")
         ]
-        if self._storageFormat == "ogr":
+        if self.storageFormat == "ogr":
             aliases.insert(0, self.tr("FID"))
 
         for i in range(0, len(aliases)):
@@ -189,7 +166,7 @@ class SafecastLayer(QgsVectorLayer):
             return # data already loaded
 
         # store metadata
-        self._metadata = {
+        self.metadata = {
             'format': reader.format_version,
             'deadtime': reader.deadtime
         }
@@ -206,7 +183,6 @@ class SafecastLayer(QgsVectorLayer):
         count = reader.count()
         start = time.clock()
         prev = None # previous feature
-        # feats = []
 
         self.startEditing()
         for f in reader:
@@ -221,7 +197,6 @@ class SafecastLayer(QgsVectorLayer):
                 prev = feat # remember feature for a next run
                 feat.setFeatureId(i)
                 self.addFeature(feat)
-                # feats.append(feat)
 
             if i % 100 == 0:
                 percent = i / float(count) * 100
@@ -249,7 +224,7 @@ class SafecastLayer(QgsVectorLayer):
                     level=QgsMessageLog.WARNING
                 )
 
-        if self._storageFormat == "ogr":
+        if self.storageFormat == "ogr":
             # write data into SQLite DB
             self._writeToSQLite()
             self.reload()
@@ -262,7 +237,7 @@ class SafecastLayer(QgsVectorLayer):
         # inform user about successful import
         iface.messageBar().pushMessage(
             self.tr("Info"),
-            self.tr("{} features loaded (in {:.2f} sec).").format(self._stats['count'], endtime),
+            self.tr("{} features loaded (in {:.2f} sec).").format(self.featureCount(), endtime),
             level=QgsMessageBar.INFO,
             duration=3
         )
@@ -287,11 +262,11 @@ class SafecastLayer(QgsVectorLayer):
             raise SafecastReaderError(self.tr("Unable to create SQLite datasource"))
 
         # set datasource to SQLite DB
-        self.setDataSource(filePath, self._layerName, self._storageFormat)
+        self.setDataSource(filePath, self._layerName, self.storageFormat)
         self._provider = self.dataProvider()
 
         # ignore also FID column
-        self._skipNumAttrbs += 1
+        self.skipNumAttrbs += 1
 
     def _addError(self, etype):
         """Add error message.
@@ -301,55 +276,6 @@ class SafecastLayer(QgsVectorLayer):
         if etype not in self._errs:
             self._errs[etype] = 0
         self._errs[etype] += 1
-
-    def _datetimediff(self, datetime_value1, datetime_value2, timeonly=False):
-        """Compute datetime difference in sec.
-
-        :param datetime_value1: first value
-        :param datetime_value2: second value
-
-        :return: time difference in sec
-        """
-        if timeonly:
-            t1 = datetime.strptime(datetime_value1.split('T', 1)[1], '%H:%M:%SZ')
-            t2 = datetime.strptime(datetime_value2.split('T', 1)[1], '%H:%M:%SZ')
-            val1 = datetime.combine(date.today(), t1.time())
-            val2 = datetime.combine(date.today(), t2.time())
-        else:
-            val1 = datetime.strptime(datetime_value1, '%Y-%m-%dT%H:%M:%SZ')
-            val2 = datetime.strptime(datetime_value2, '%Y-%m-%dT%H:%M:%SZ')
-
-        return val2 - val1
-
-    def _datetime2year(self, datetime_value):
-        """Convert datatime value to year.
-
-        :datetime_value: date time value (eg. '2016-05-16T18:22:26Z')
-
-        :return: local time as a int (2016)
-        """
-        try:
-            return datetime.strptime(
-                datetime_value, '%Y-%m-%dT%H:%M:%SZ'
-            ).year
-        except ValueError:
-            return 0
-
-    def _datetime2localtime(self, datetime_value):
-        """Convert datetime value to local time.
-
-        :datetime_value: date time value (eg. '2016-05-16T18:22:26Z')
-
-        :return: local time as a string (eg. '20:22:26')
-        """
-        from_zone = tz.tzutc()
-        to_zone = tz.tzlocal()
-
-        utc = datetime.strptime(datetime_value, '%Y-%m-%dT%H:%M:%SZ')
-        utc = utc.replace(tzinfo=from_zone)
-        local = utc.astimezone(to_zone)
-
-        return local.strftime('%H:%M:%S')
 
     def _processRow(self, row, rowid, prev):
         """Process line in LOG file and create a new point feature based on this line.
@@ -446,32 +372,6 @@ class SafecastLayer(QgsVectorLayer):
 
         return fet
 
-    def save(self, filePath):
-        """Save layer to a new LOG file.
-
-        Raises SafecastWriterError on failure.
-
-        :param filePath: name for output file
-        """
-        try:
-            with open(filePath, 'w') as f:
-                f.write('# NEW LOG\n')
-                f.write('# format={}\n'.format(self._metadata['format']))
-                f.write('# deadtime={}\n'.format(self._metadata['deadtime']))
-                features = self.getFeatures()
-                for feat in features:
-                    attrs = feat.attributes()
-                    row = ''
-                    for val in attrs[self._skipNumAttrbs:-2]: # skip calculated points
-                        row += '{},'.format(val)
-                    row += '{}'.format(attrs[-2])
-                    # join two last columns(hdop+checksum)
-                    checksum = self._gpsChecksum(row[1:]) # skip '$'
-                    row += '*{}\n'.format(checksum)
-                    f.write(row)
-        except IOError as e:
-            raise SafecastWriterError(e)
-
     def path(self):
         """Return layer file directory path.
 
@@ -488,12 +388,101 @@ class SafecastLayer(QgsVectorLayer):
             os.path.basename(self._fileName)
         )[0]
 
-    def _updateStats(self, data):
+class SafecastLayerHelper(object):
+    def __init__(self, layer):
+        self._layer = layer
+        if isinstance(layer, SafecastLayer):
+            self._storageFormat = layer.storageFormat
+            self._skipNumAttrbs = layer.skipNumAttrbs
+        else:
+            # assuming SQLite (ogr)
+            self._storageFormat = "ogr"
+            # better to be stored in metadata than hardcoded
+            self._skipNumAttrbs = 7
+
+        # ader statistics
+        self._updateStats()
+
+        # ader plot
+        self._plot = []
+
+        # create object for distance computation
+        self._distance = QgsDistanceArea()
+        self._distance.setEllipsoidalMode(True)
+        self._distance.setEllipsoid('WGS84')
+
+        # connects
+        self._layer.beforeCommitChanges.connect(self.recalculateAttributes)
+
+    def _gpsChecksum(self, row):
+        """Compute checksum of row.
+
+        :param row: row line
+
+        :return: checksum
+        """
+        chk = ord(row[0])
+
+        for ichk in row[1:]:
+            chk ^= ord(ichk)
+
+        return hex(chk)[2:].upper()
+
+    def _getMetadata(self):
+        """Get metadata."""
+        if isinstance(self._layer, SafecastLayer):
+            return self._layer.metadata
+        else:
+            return None
+        
+    def save(self, filePath):
+        """Save layer to a new LOG file.
+
+        Raises SafecastWriterError on failure.
+
+        :param filePath: name for output file
+        """
+        try:
+            with open(filePath, 'w') as f:
+                f.write('# NEW LOG\n')
+                metadata = self._getMetadata()
+                f.write('# format={}\n'.format(metadata['format']))
+                f.write('# deadtime={}\n'.format(metadata['deadtime']))
+                features = self._layer.getFeatures()
+                for feat in features:
+                    attrs = feat.attributes()
+                    row = ''
+                    for val in attrs[self._skipNumAttrbs:-2]: # skip calculated points
+                        row += '{},'.format(val)
+                    row += '{}'.format(attrs[-2])
+                    # join two last columns(hdop+checksum)
+                    checksum = self._gpsChecksum(row[1:]) # skip '$'
+                    row += '*{}\n'.format(checksum)
+                    f.write(row)
+        except IOError as e:
+            raise SafecastWriterError(e)
+
+    def _updateStats(self, data=None):
         """Update ader statistics.
 
         :param ader: ader statistics
         """
-        self._stats = data
+        if data:
+            self._stats = data
+        else:
+            self._stats = {
+                'count' : 0,
+                'radiation': {
+                    'max' : None,
+                    'avg' : None,
+                    'total': None,
+                },
+                'route': {
+                    'speed' : None,
+                    'time': None,
+                    'distance' : None,
+                }
+            }
 
     def stats(self):
         """Get layer statistics"""
@@ -511,34 +500,6 @@ class SafecastLayer(QgsVectorLayer):
             y.append(ader)
 
         return x, y
-
-    def _gpsChecksum(self, row):
-        """Compute checksum of row.
-
-        :param row: row line
-
-        :return: checksum
-        """
-        chk = ord(row[0])
-
-        for ichk in row[1:]:
-            chk ^= ord(ichk)
-
-        return hex(chk)[2:].upper()
-
-    def _checkDate(self, fdate):
-        """Check if date is valid.
-
-        :param fdate: date to be checked
-
-        :return: True if date is valid otherwise False
-        """
-        minyear = 2011
-        maxyear = datetime.now().year
-        myear = self._datetime2year(fdate)
-        if myear < minyear or myear > maxyear:
-            return False
-        return True
 
     def _validateDate(self, feat_datetime, prev_datetime, first_valid_date):
         """Validate date.
@@ -575,8 +536,73 @@ class SafecastLayer(QgsVectorLayer):
             '%Y-%m-%dT%H:%M:%SZ'
         ), True
 
-    def recalculateAttributes(self):
+    def _datetime2localtime(self, datetime_value):
+        """Convert datetime value to local time.
+
+        :datetime_value: date time value (eg. '2016-05-16T18:22:26Z')
+
+        :return: local time as a string (eg. '20:22:26')
+        """
+        from_zone = tz.tzutc()
+        to_zone = tz.tzlocal()
+
+        utc = datetime.strptime(datetime_value, '%Y-%m-%dT%H:%M:%SZ')
+        utc = utc.replace(tzinfo=from_zone)
+        local = utc.astimezone(to_zone)
+
+        return local.strftime('%H:%M:%S')
+
+    def _checkDate(self, fdate):
+        """Check if date is valid.
+
+        :param fdate: date to be checked
+
+        :return: True if date is valid otherwise False
+        """
+        minyear = 2011
+        maxyear = datetime.now().year
+        myear = self._datetime2year(fdate)
+        if myear < minyear or myear > maxyear:
+            return False
+        return True
+
+    def _datetime2year(self, datetime_value):
+        """Convert datatime value to year.
+
+        :datetime_value: date time value (eg. '2016-05-16T18:22:26Z')
+
+        :return: local time as a int (2016)
+        """
+        try:
+            return datetime.strptime(
+                datetime_value, '%Y-%m-%dT%H:%M:%SZ'
+            ).year
+        except ValueError:
+            return 0
+
+    def _datetimediff(self, datetime_value1, datetime_value2, timeonly=False):
+        """Compute datetime difference in sec.
+
+        :param datetime_value1: first value
+        :param datetime_value2: second value
+
+        :return: time difference in sec
+        """
+        if timeonly:
+            t1 = datetime.strptime(datetime_value1.split('T', 1)[1], '%H:%M:%SZ')
+            t2 = datetime.strptime(datetime_value2.split('T', 1)[1], '%H:%M:%SZ')
+            val1 = datetime.combine(date.today(), t1.time())
+            val2 = datetime.combine(date.today(), t2.time())
+        else:
+            val1 = datetime.strptime(datetime_value1, '%Y-%m-%dT%H:%M:%SZ')
+            val2 = datetime.strptime(datetime_value2, '%Y-%m-%dT%H:%M:%SZ')
+
+        return val2 - val1
+
+    def recalculateAttributes(self, only_stats=False):
         """Update attributes after loading or editing.
+
+        :param only_stats: True for dry run (do not update attributes, only stats computed)
         """
         def td2str(td):
             """Convert timedelta objects to a HH:MM string with (+/-) sign
@@ -593,12 +619,12 @@ class SafecastLayer(QgsVectorLayer):
         # skip FID column for SQLite storage
         idx = 1 if check_version() and self._storageFormat == "ogr" else 0
 
-        dose_inc_idx = self.fieldNameIndex("dose_increment")
-        time_cum_idx = self.fieldNameIndex("time_cumulative")
-        dose_cum_idx = self.fieldNameIndex("dose_cumulative")
-        speed_idx = self.fieldNameIndex("speed_kmph")
-        time_local_idx = self.fieldNameIndex("time_local")
-        datetime_idx = self.fieldNameIndex("date_time")
+        dose_inc_idx = self._layer.fieldNameIndex("dose_increment")
+        time_cum_idx = self._layer.fieldNameIndex("time_cumulative")
+        dose_cum_idx = self._layer.fieldNameIndex("dose_cumulative")
+        speed_idx = self._layer.fieldNameIndex("speed_kmph")
+        time_local_idx = self._layer.fieldNameIndex("time_local")
+        datetime_idx = self._layer.fieldNameIndex("date_time")
 
         prev = None     # previous feature
 
@@ -611,7 +637,7 @@ class SafecastLayer(QgsVectorLayer):
 
         # fix first valid datetime
         first_valid_date = None
-        iter = self.getFeatures()
+        iter = self._layer.getFeatures()
         for feat in iter:
             fdate_time = feat.attribute("date_time")
             if self._checkDate(fdate_time):
@@ -620,8 +646,8 @@ class SafecastLayer(QgsVectorLayer):
 
         if first_valid_date is None:
             iface.messageBar().pushMessage(
-                self.tr("Warning"),
-                self.tr("No valid date found. Unable to fix datetime."),
+                self._layer.tr("Warning"),
+                self._layer.tr("No valid date found. Unable to fix datetime."),
                 level=QgsMessageBar.WARNING,
                 duration=5
             )
@@ -630,7 +656,7 @@ class SafecastLayer(QgsVectorLayer):
         ## self.startEditing()
 
         prev_datetime = None
-        iter = self.getFeatures()
+        iter = self._layer.getFeatures()
 
         ader_max = None
         ader_cum = 0
@@ -653,7 +679,7 @@ class SafecastLayer(QgsVectorLayer):
                 # update plot data
                 self._plot.append((time_local, ader))
             except ValueError:
-                time_local = self.tr("unknown")
+                time_local = self._layer.tr("unknown")
 
             if prev:
                 timediff = self._datetimediff(
@@ -699,29 +725,38 @@ class SafecastLayer(QgsVectorLayer):
             if newdt:
                 attrs[datetime_idx] = feat_datetime
 
-            for idx, value in attrs.items():
-                self.changeAttributeValue(feat.id(), idx, value)
-
             count += 1
+            if only_stats:
+                continue
+
+            for idx, value in attrs.items():
+                self._layer.changeAttributeValue(feat.id(), idx, value)
 
         # save changes
         # not needed, called before changes are commited
         ## self.commitChanges()
 
         # update layer internal statistics
-        self._updateStats({
-            'count' : count,
-            'radiation': {
-                'max' : ader_max,
-                'avg' : ader_cum / count,
-                'total': dose_cum,
-            },
-            'route': {
-                'speed' : speed_cum / count,
-                'time': time_cum,
-                'distance' : dist_cum,
-            }
-        })
+        if count > 0:
+            self._updateStats({
+                'count' : count,
+                'radiation': {
+                    'max' : ader_max,
+                    'avg' : ader_cum / count,
+                    'total': dose_cum,
+                },
+                'route': {
+                    'speed' : speed_cum / count,
+                    'time': time_cum,
+                    'distance' : dist_cum,
+                }
+            })
+        else:
+            self._updateStats()
 
-        # force reload attributes
-        self._provider.forceReload()
+        if not only_stats:
+            # force reload attributes
+            self._layer.dataProvider().forceReload()
+
+    def computeStats(self):
+        self.recalculateAttributes(only_stats=False)
