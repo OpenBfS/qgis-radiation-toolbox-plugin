@@ -504,7 +504,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                     self.tr("Info"),
                     self.tr("Updating attributes..."),
                     level=QgsMessageBar.INFO,
-                    duration=3
+                    duration=1
                 )
                 layer.setReadOnly(False)
                 iface.actionToggleEditing().trigger()
