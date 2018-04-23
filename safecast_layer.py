@@ -370,7 +370,10 @@ class SafecastLayer(QgsVectorLayer):
         # workaround: setting up precision causes in QGIS 2
         # problems when exporing data into other formats, see
         # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
-        row.insert(0, float('{0:.4f}'.format(ader)))
+        # disabled
+        # see https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/14/decrease-the-number-of-decimal-places-in
+        # row.insert(0, float('{0:.4f}'.format(ader)))
+        row.insert(0, ader)
 
         # local time will be calculated after loading whole file
         row.insert(1, None)
@@ -739,7 +742,10 @@ class SafecastLayerHelper(object):
                 # workaround: setting up precision causes in QGIS 2
                 # problems when exporing data into other formats, see
                 # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
-                speed = float('{0:.2f}'.format((dist / 1e3) / timediff)) # kmph
+                # disabled
+                # see https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/14/decrease-the-number-of-decimal-places-in
+                # speed = float('{0:.2f}'.format((dist / 1e3) / timediff)) # kmph
+                speed = (dist / 1e3) / timediff # kmph
                 speed_cum += speed
 
                 # time cumulative
