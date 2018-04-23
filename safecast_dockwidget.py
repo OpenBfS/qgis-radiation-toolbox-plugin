@@ -35,6 +35,8 @@ from qgis.core import QgsMapLayerRegistry, QgsProject, QgsRasterLayer
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
+from osgeo import ogr
+
 from .reader import SafecastReader, SafecastReaderError, SafecastReaderLogger
 from .safecast_layer import SafecastLayer, SafecastWriterError, SafecastLayerHelper
 from .safecast_stats import SafecastStats
@@ -79,7 +81,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self.actionUpdateStatsPlot = QAction("UpdateStatsPlot", self)
 
         # generic connects
-        iface.currentLayerChanged.connect(self.onUpdateStatsPlot)
+        iface.currentLayerChanged.connect(self.onUpdatePlugin)
         self.actionUpdateStatsPlot.triggered.connect(self.onUpdateStatsPlot)
 
         # load internal styles
@@ -407,12 +409,18 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         """
         # get currently selected layer
         layer = self.getActiveLayer()
+        helper = self._getLayerHelper(layer)
+        if not helper:
+                QMessageBox.critical(None, self.tr("Error"),
+                                     self.tr("Invalid Safecast layer"),
+                                     QMessageBox.Abort
+                )
 
         # overwrite check disabled because of possible missing file extension
         filePath = QFileDialog.getSaveFileName(self, self.tr("Save layer as new LOG file"),
                                                os.path.join(
-                                                   layer.path() if layer else ".",
-                                                   layer.filename() + '_mod.LOG'
+                                                   helper.path() if layer else ".",
+                                                   helper.filename() + '_mod.LOG'
                                                ),
                                                self.tr("LOG file (*.LOG)"),
                                                QFileDialog.DontConfirmOverwrite)
@@ -436,9 +444,6 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         if layer:
             try:
                 # export layer to LOG file
-                helper = self._getLayerHelper(layer)
-                if not helper:
-                    raise SafecastWriterError(self.tr("Invalid Safecast layer"))
                 helper.save(filePath)
             except SafecastWriterError as e:
                 QMessageBox.critical(None, self.tr("Error"),
@@ -625,7 +630,20 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         else:
             groupTitle = self.tr("Plot")
         self.groupPlot.setTitle(groupTitle)
-            
+
+    def onUpdatePlugin(self):
+        """Update plugin widgets.
+        """
+        layer = iface.activeLayer()
+
+        enabled = True if layer and self._checkSafecastLayer(layer) else False
+        self.actionSave.setEnabled(enabled)
+        self.actionSelect.setEnabled(enabled)
+        self.actionDeselect.setEnabled(enabled)
+        self.actionDelete.setEnabled(enabled)
+
+        self.actionUpdateStatsPlot.trigger()
+
     def onUpdateStatsPlot(self):
         """Update stats & plot for currently selected safecast layer.
         """
@@ -635,7 +653,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         # layer loaded from project
         if not isinstance(layer, SafecastLayer) and self._checkSafecastLayer(layer):
-            helper = SafecastLayerHelper(layer, storageFormat='ogr')
+            helper = SafecastLayerHelper(layer)
             helper.computeStats()
             self._layers[layer.id()] = helper
 
@@ -652,5 +670,13 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             # map layer loaded by Safecast plugin
             return True
 
-        # TODO: provide better check
-        return layer.attribution() == 'Safecast plugin'
+        try:
+            filePath = layer.dataProvider().dataSourceUri().split('|')[0]
+            ds = ogr.Open(filePath)
+            layer = ds.GetLayerByName('safecast_metadata')
+            is_safecast_layer = True if layer else False
+            ds = None
+        except:
+            is_safecast_layer = None
+
+        return is_safecast_layer

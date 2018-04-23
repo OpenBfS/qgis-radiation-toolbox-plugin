@@ -34,6 +34,8 @@ from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
 from qgis.utils import iface, QGis
 from qgis.gui import QgsMessageBar
 
+from osgeo import ogr
+
 from .reader import SafecastReaderError
 
 def check_version(min_version=(2,18)):
@@ -55,8 +57,8 @@ class SafecastLayer(QgsVectorLayer):
         :param fileName: path to input file
         :param storageFormat: storage format for layer (Memory or SQLite)
         """
-        self._fileName = fileName
-        self._layerName = os.path.splitext(os.path.basename(self._fileName))[0]
+        self.fileName = fileName
+        self._layerName = os.path.splitext(os.path.basename(self.fileName))[0]
 
         self.storageFormat = storageFormat
         
@@ -219,7 +221,7 @@ class SafecastLayer(QgsVectorLayer):
             for attr in self._errs.keys():
                 QgsMessageLog.logMessage(
                     "{}: {} measurement(s) skipped (invalid {})".format(
-                        self._fileName, self._errs[attr], attr
+                        self.fileName, self._errs[attr], attr
                     ),
                     level=QgsMessageLog.WARNING
                 )
@@ -249,7 +251,7 @@ class SafecastLayer(QgsVectorLayer):
         self.setReadOnly(True)
 
     def _writeToSQLite(self):
-        filePath = os.path.splitext(self._fileName)[0] + '.sqlite'
+        filePath = os.path.splitext(self.fileName)[0] + '.sqlite'
         writer = QgsVectorFileWriter.writeAsVectorFormat(
             self,
             filePath,
@@ -264,9 +266,27 @@ class SafecastLayer(QgsVectorLayer):
         # set datasource to SQLite DB
         self.setDataSource(filePath, self._layerName, self.storageFormat)
         self._provider = self.dataProvider()
-
         # ignore also FID column
         self.skipNumAttrbs += 1
+
+        # create metadata layer
+        ds = ogr.Open(filePath, True)
+        layer_name = 'safecast_metadata'
+        layer = ds.GetLayerByName(layer_name)
+        print layer
+        if layer is None:
+            layer = ds.CreateLayer(layer_name, None, ogr.wkbNone)
+            print layer
+        layer_defn = layer.GetLayerDefn()
+        for key in self.metadata.keys():
+            field = ogr.FieldDefn(key, ogr.OFTString)
+            layer.CreateField(field)
+
+        feat = ogr.Feature(layer_defn)
+        for key, value in self.metadata.items():
+            feat.SetField(key, value)
+        layer.CreateFeature(feat)
+        feat = None
 
     def _addError(self, etype):
         """Add error message.
@@ -372,6 +392,34 @@ class SafecastLayer(QgsVectorLayer):
 
         return fet
 
+class SafecastLayerHelper(object):
+    def __init__(self, layer):
+        self._layer = layer
+        if isinstance(layer, SafecastLayer):
+            self._storageFormat = layer.storageFormat
+            self._skipNumAttrbs = layer.skipNumAttrbs
+            self._fileName = layer.fileName
+        else:
+            # assuming SQLite (ogr)
+            self._storageFormat = "ogr"
+            # better to be stored in metadata than hardcoded
+            self._skipNumAttrbs = 7
+            self._fileName = layer.dataProvider().dataSourceUri().split('|')[0]
+
+        # ader statistics
+        self._updateStats()
+
+        # ader plot
+        self._plot = []
+
+        # create object for distance computation
+        self._distance = QgsDistanceArea()
+        self._distance.setEllipsoidalMode(True)
+        self._distance.setEllipsoid('WGS84')
+
+        # connects
+        self._layer.beforeCommitChanges.connect(self.recalculateAttributes)
+
     def path(self):
         """Return layer file directory path.
 
@@ -387,32 +435,6 @@ class SafecastLayer(QgsVectorLayer):
         return os.path.splitext(
             os.path.basename(self._fileName)
         )[0]
-
-class SafecastLayerHelper(object):
-    def __init__(self, layer):
-        self._layer = layer
-        if isinstance(layer, SafecastLayer):
-            self._storageFormat = layer.storageFormat
-            self._skipNumAttrbs = layer.skipNumAttrbs
-        else:
-            # assuming SQLite (ogr)
-            self._storageFormat = "ogr"
-            # better to be stored in metadata than hardcoded
-            self._skipNumAttrbs = 7
-
-        # ader statistics
-        self._updateStats()
-
-        # ader plot
-        self._plot = []
-
-        # create object for distance computation
-        self._distance = QgsDistanceArea()
-        self._distance.setEllipsoidalMode(True)
-        self._distance.setEllipsoid('WGS84')
-
-        # connects
-        self._layer.beforeCommitChanges.connect(self.recalculateAttributes)
 
     def _gpsChecksum(self, row):
         """Compute checksum of row.
@@ -432,8 +454,26 @@ class SafecastLayerHelper(object):
         """Get metadata."""
         if isinstance(self._layer, SafecastLayer):
             return self._layer.metadata
-        else:
-            return None
+
+        metadata = {}
+        try:
+            ds = ogr.Open(self._fileName)
+            layer = ds.GetLayerByName('safecast_metadata')
+            if layer:
+                layer_defn = layer.GetLayerDefn()
+                layer.ResetReading()
+                feat = layer.GetNextFeature()
+                for i in range(layer_defn.GetFieldCount()):
+                    name = layer_defn.GetFieldDefn(i).GetName()
+                    value = feat.GetField(i)
+                    metadata[name] = value
+            ds = None
+        except:
+            raise SafecastReaderError(
+                self.tr("Unable to retrive Safecast metadata for selected layer")
+            )
+
+        return metadata
         
     def save(self, filePath):
         """Save layer to a new LOG file.
