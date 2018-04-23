@@ -182,6 +182,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
             self._statsLayout.addWidget(self._statsLabel)
             self._statsLayout.addItem(self._statsSpacer)
+            self._statsWidget.setVisible(False)
             self._statsVisible = False
             return # initialization done
 
@@ -564,6 +565,9 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
 
         :param: layer Safecast layer
         """
+        if not layer:
+            return None
+
         try:
             helper = self._layers[layer.id()]
         except:
@@ -648,8 +652,6 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         """Update stats & plot for currently selected safecast layer.
         """
         layer = iface.activeLayer()
-        if not layer:
-            return
 
         # layer loaded from project
         if not isinstance(layer, SafecastLayer) and self._checkSafecastLayer(layer):
