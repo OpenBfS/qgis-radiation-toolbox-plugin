@@ -793,7 +793,7 @@ class SafecastLayerHelper(object):
                 },
                 'route': {
                     'speed' : speed_cum / count,
-                    'time': time_cum,
+                    'time': td2str(timedelta(hours=time_cum)),
                     'distance' : dist_cum,
                 }
             })

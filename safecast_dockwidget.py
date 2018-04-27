@@ -602,8 +602,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         self._statsWidget.setData(OrderedDict([
             (self.tr('Route information'), [
                 (self.tr('average speed (km/h)'), '{0:.1f}'.format(stats['route']['speed'])),
-                (self.tr('total monitoring time'),
-                 (datetime(2000,1,1) + timedelta(hours=stats['route']['time'])).strftime("%H:%M:%S"),
+                (self.tr('total monitoring time'), stats['route']['time'],
                 ),
                 (self.tr('total distance (km)'), '{0:.3f}'.format(stats['route']['distance'] / 1000)),
             ]),
