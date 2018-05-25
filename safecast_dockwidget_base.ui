@@ -345,12 +345,12 @@ QGroupBox::title {
             <widget class="QComboBox" name="storageCombo">
              <item>
               <property name="text">
-               <string>Memory</string>
+               <string>SQLite</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>SQLite</string>
+               <string>Memory</string>
               </property>
              </item>
             </widget>

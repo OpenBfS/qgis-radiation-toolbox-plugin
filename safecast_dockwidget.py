@@ -310,7 +310,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             return
 
         # storage format
-        storageFormat = 'memory' if self.storageCombo.currentIndex() == 0 else 'ogr'
+        storageFormat = 'ogr' if self.storageCombo.currentIndex() == 0 else 'memory'
 
         filePath = os.path.normpath(filePath)
         try:
