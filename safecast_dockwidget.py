@@ -638,8 +638,15 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         """Update plugin widgets.
         """
         layer = iface.activeLayer()
-
         enabled = True if layer and self._checkSafecastLayer(layer) else False
+        if enabled:
+            iface.messageBar().pushMessage(
+                self.tr("Info"),
+                self.tr("Updating statistics for {}...".format(layer.name())),
+                level=QgsMessageBar.INFO,
+                duration=3
+            )
+
         self.actionSave.setEnabled(enabled)
         self.actionSelect.setEnabled(enabled)
         self.actionDeselect.setEnabled(enabled)

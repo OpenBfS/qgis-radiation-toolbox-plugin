@@ -99,27 +99,18 @@ class SafecastPlot(Qwt.QwtPlot):
         # attach a x-axis
         xaxis = SafecastAxis(Qwt.QwtPlot.xBottom, Qwt.QwtPlot.yLeft)
         xaxis.attach(self)
-        if hasQwt5:
-            self.setAxisTitle(Qwt.QwtPlot.xBottom, self.tr("Local Time"))
-        else:
-            self.setAxisTitle(Qwt.QwtPlot.xBottom, self.tr("Local Time"))
+        self.setAxisTitle(Qwt.QwtPlot.xBottom, self.tr("Distance (km)"))
+
         # attach a y-axis
         yaxis = SafecastAxis(Qwt.QwtPlot.yLeft, Qwt.QwtPlot.xBottom)
         yaxis.attach(self)
-        if hasQwt5:
-            self.setAxisTitle(Qwt.QwtPlot.yLeft, self.tr("ADER (microSv/h)"))
-        else:
-            self.setAxisTitle(Qwt.QwtPlot.yLeft, self.tr("ADER (microSv/h)"))
+        self.setAxisTitle(Qwt.QwtPlot.yLeft, self.tr("ADER (microSv/h)"))
 
     def update(self, layer, style):
         """Update plot for given Safecast layer.
 
         :param layer: Safecast layer
         """
-        def time2float(value):
-            h, m, s = map(float, value.split(':'))
-            return h + m / 60. + s / 3600.
-            
         # collect plot coordinates
         x, y = layer.plotData()
             
@@ -145,3 +136,4 @@ class SafecastPlot(Qwt.QwtPlot):
         curve.setData(x, y)
 
         self.replot()
+

@@ -410,7 +410,7 @@ class SafecastLayerHelper(object):
         self._updateStats()
 
         # ader plot
-        self._plot = []
+        self._plot = [[], []]
 
         # create object for distance computation
         self._distance = QgsDistanceArea()
@@ -529,17 +529,7 @@ class SafecastLayerHelper(object):
         return self._stats
 
     def plotData(self):
-        def time2float(value):
-            h, m, s = map(float, value.split(':'))
-            return h + m / 60. + s / 3600.
-
-        x = []
-        y = []
-        for time_local, ader in self._plot:
-            x.append(time2float(time_local))
-            y.append(ader)
-
-        return x, y
+        return self._plot
 
     def _validateDate(self, feat_datetime, prev_datetime, first_valid_date):
         """Validate date.
@@ -716,8 +706,6 @@ class SafecastLayerHelper(object):
             # compute local time (from datetime)
             try:
                 time_local = self._datetime2localtime(feat_datetime)
-                # update plot data
-                self._plot.append((time_local, ader))
             except ValueError:
                 time_local = self._layer.tr("unknown")
 
@@ -757,6 +745,10 @@ class SafecastLayerHelper(object):
             # set previous feature for next run
             prev = feat
             prev_datetime = feat_datetime
+
+            # update plot data
+            self._plot[0].append(dist_cum / 1000) # km
+            self._plot[1].append(ader)
 
             # update attributes
             attrs = { dose_inc_idx: dose_inc,
