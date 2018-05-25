@@ -97,6 +97,7 @@ class SafecastLayer(QgsVectorLayer):
             QgsField("checksum", QVariant.String)
         ]
         # skip computed attributes
+        # - FID (SQLite only)
         # - ader_microsvh
         # - time_local
         # - speed_kmph
@@ -266,17 +267,13 @@ class SafecastLayer(QgsVectorLayer):
         # set datasource to SQLite DB
         self.setDataSource(filePath, self._layerName, self.storageFormat)
         self._provider = self.dataProvider()
-        # ignore also FID column
-        self.skipNumAttrbs += 1
 
         # create metadata layer
         ds = ogr.Open(filePath, True)
         layer_name = 'safecast_metadata'
         layer = ds.GetLayerByName(layer_name)
-        print layer
         if layer is None:
             layer = ds.CreateLayer(layer_name, None, ogr.wkbNone)
-            print layer
         layer_defn = layer.GetLayerDefn()
         for key in self.metadata.keys():
             field = ogr.FieldDefn(key, ogr.OFTString)
@@ -400,7 +397,7 @@ class SafecastLayerHelper(object):
         self._layer = layer
         if isinstance(layer, SafecastLayer):
             self._storageFormat = layer.storageFormat
-            self._skipNumAttrbs = layer.skipNumAttrbs
+            self._skipNumAttrbs = 7 if self._storageFormat == 'ogr' else 6
             self._fileName = layer.fileName
         else:
             # assuming SQLite (ogr)
