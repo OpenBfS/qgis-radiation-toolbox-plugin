@@ -572,9 +572,9 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             helper = self._layers[layer.id()]
         except:
             helper = None
-            iface.messageBar().pushMessage(self.tr("Warning"),
-                                           self.tr("Unable to retrieve Safecast data for selected layer"),
-                                           level=QgsMessageBar.WARNING, duration=5)
+            # iface.messageBar().pushMessage(self.tr("Warning"),
+            #                                self.tr("Unable to retrieve Safecast data for selected layer"),
+            #                                level=QgsMessageBar.WARNING, duration=5)
         return helper
 
     def updateStats(self, layer):
