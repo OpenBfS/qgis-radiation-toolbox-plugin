@@ -692,6 +692,7 @@ class SafecastLayerHelper(object):
         ader_cum = 0
         speed_cum = 0
         dist_cum = 0
+        self._plot = [[], []]
         for feat in iter:
             feat_datetime = feat.attribute("date_time")
             # fix date if invalid

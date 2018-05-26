@@ -106,6 +106,9 @@ class SafecastPlot(Qwt.QwtPlot):
         yaxis.attach(self)
         self.setAxisTitle(Qwt.QwtPlot.yLeft, self.tr("ADER (microSv/h)"))
 
+        # curve
+        self.curve = None
+
     def update(self, layer, style):
         """Update plot for given Safecast layer.
 
@@ -113,27 +116,29 @@ class SafecastPlot(Qwt.QwtPlot):
         """
         # collect plot coordinates
         x, y = layer.plotData()
-            
-        # clear plot first
+
+        # clear plot first & detach curve
         if hasQwt5:
             self.clear()
         else:
             self.detachItems([Qwt.QwtPlotItem.Rtti_PlotItem], True)
+            if self.curve:
+                self.curve.detach()
 
         # attach a curve
-        curve = Qwt.QwtPlotCurve('ader_microSvh')
-        curve.attach(self)
+        self.curve = Qwt.QwtPlotCurve('ader_microSvh')
+        self.curve.attach(self)
 
         if style == 0: # lines
-            curve.setPen(Qt.QPen(Qt.Qt.blue, 0))
+            self.curve.setPen(Qt.QPen(Qt.Qt.blue, 0))
         else:          # points
-            curve.setStyle(Qwt.QwtPlotCurve.NoCurve)
-            curve.setSymbol(Qwt.QwtSymbol(Qwt.QwtSymbol.Ellipse,
-                                          Qt.QBrush(Qt.Qt.blue),
-                                          Qt.QPen(Qt.Qt.blue),
-                                          Qt.QSize(5, 5)))
+            self.curve.setStyle(Qwt.QwtPlotCurve.NoCurve)
+            self.curve.setSymbol(Qwt.QwtSymbol(Qwt.QwtSymbol.Ellipse,
+                                               Qt.QBrush(Qt.Qt.blue),
+                                               Qt.QPen(Qt.Qt.blue),
+                                               Qt.QSize(5, 5)))
 
-        curve.setData(x, y)
+        self.curve.setData(x, y)
 
         self.replot()
 
