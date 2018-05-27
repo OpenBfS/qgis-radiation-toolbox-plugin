@@ -224,7 +224,7 @@ class SafecastLayer(QgsVectorLayer):
                     "{}: {} measurement(s) skipped (invalid {})".format(
                         self.fileName, self._errs[attr], attr
                     ),
-                    level=QgsMessageLog.WARNING
+                    tag='Safecast'
                 )
 
         if self.storageFormat == "ogr":
@@ -702,6 +702,7 @@ class SafecastLayerHelper(object):
         speed_cum = 0
         dist_cum = 0
         self._plot = [[], []]
+        start = time.clock()
         for feat in iter:
             feat_datetime = feat.attribute("date_time")
             # fix date if invalid
@@ -802,6 +803,11 @@ class SafecastLayerHelper(object):
         if not only_stats:
             # force reload attributes
             self._layer.dataProvider().forceReload()
+
+            QgsMessageLog.logMessage('{}: {} features updated in {} sec'.format(
+                self._layer.name(), self._layer.featureCount(), time.clock() - start),
+                                     tag='Safecast'
+            )
 
     def computeStats(self):
         self.recalculateAttributes(only_stats=False)
