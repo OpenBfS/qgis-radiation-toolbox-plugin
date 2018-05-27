@@ -348,6 +348,15 @@ class SafecastLayer(QgsVectorLayer):
         #         minyear, maxyear
         #     ))
         #     return None
+
+        # check timestamp (hours only, dates are fixed when
+        # recalculating attributes) validity
+        try:
+            datetime.strptime(row[2].split('T', 1)[1], "%H:%M:%SZ")
+        except ValueError as e:
+            self._addError('invalid timestamp {}'.format(row[2]))
+            return None
+
         # - null island
         if abs(x) < sys.float_info.epsilon or \
            abs(y) < sys.float_info.epsilon:
