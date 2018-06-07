@@ -320,10 +320,12 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             layer = SafecastLayer(filePath, storageFormat)
             # register new layer in plugin's internal list
             # helper must be assigned before loading data (!)
-            self._layers[layer.id()] = SafecastLayerHelper(layer)
+            self._layers[layer.id()] = helper = SafecastLayerHelper(layer)
 
-            # load data by reader into new layer and set style
+            # load data by reader into new layer
             layer.load(reader)
+            helper.recalculateAttributes()
+
             # set style
             layer.loadNamedStyle(self.stylePath())
             layer.setAliases() # loadNameStyle removes aliases (why?)
@@ -509,10 +511,12 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                 layer.setReadOnly(False)
                 iface.actionToggleEditing().trigger()
                 iface.actionDeleteSelected().trigger()
-                self.actionUpdateStatsPlot.trigger()
                 iface.actionSaveActiveLayerEdits().trigger()
                 iface.actionToggleEditing().trigger()
                 layer.setReadOnly(True)
+
+                self._layers[layer.id()].recalculateAttributes()
+                # self.actionUpdateStatsPlot.trigger()
         else:
             # inform user - no features selected, nothing to be deleted
             iface.messageBar().pushMessage(self.tr("Info"), self.tr("No features selected. Nothing to be deleled."),

@@ -427,7 +427,7 @@ class SafecastLayerHelper(object):
         self._distance.setEllipsoid('WGS84')
 
         # connects
-        self._layer.beforeCommitChanges.connect(self.recalculateAttributes)
+        # self._layer.beforeCommitChanges.connect(self.recalculateAttributes)
 
     def path(self):
         """Return layer file directory path.
@@ -691,8 +691,9 @@ class SafecastLayerHelper(object):
                 duration=5
             )
 
-        # not needed, called before changes are commited
-        ## self.startEditing()
+        if not only_stats:
+            self._layer.setReadOnly(False)
+            self._layer.startEditing()
 
         prev_datetime = None
         iter = self._layer.getFeatures()
@@ -778,10 +779,6 @@ class SafecastLayerHelper(object):
             for idx, value in attrs.items():
                 self._layer.changeAttributeValue(feat.id(), idx, value)
 
-        # save changes
-        # not needed, called before changes are commited
-        ## self.commitChanges()
-
         # update layer internal statistics
         if count > 0:
             self._updateStats({
@@ -800,7 +797,11 @@ class SafecastLayerHelper(object):
         else:
             self._updateStats()
 
+        # save changes
         if not only_stats:
+            self._layer.commitChanges()
+            self._layer.setReadOnly(True)
+
             # force reload attributes
             self._layer.dataProvider().forceReload()
 
