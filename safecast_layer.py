@@ -25,6 +25,8 @@ import time
 from datetime import datetime, timedelta, date
 from dateutil import tz
 
+import sqlite3
+
 from PyQt4.QtCore import QVariant
 from PyQt4.QtGui import QProgressBar
 
@@ -655,15 +657,25 @@ class SafecastLayerHelper(object):
                 int(tdhours), int(tdminutes), int(rem)
             )
 
-        # skip FID column for SQLite storage
-        idx = 1 if check_version() and self._storageFormat == "ogr" else 0
+        ### IMPORTANT
+        ### switch from QGIS API to SQLite3 API, see
+        ### https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/27/updating-attributes-takes-several-minutes
+        conn = connCur = None
+        if check_version() and self._storageFormat == "ogr":
+            idx = 1 # skip FID column for SQLite storage
+            conn = sqlite3.connect(self._layer.dataProvider().dataSourceUri().split('|')[0])
+            connCur = conn.cursor()
+        else:
+            idx = 0
 
-        dose_inc_idx = self._layer.fieldNameIndex("dose_increment")
-        time_cum_idx = self._layer.fieldNameIndex("time_cumulative")
-        dose_cum_idx = self._layer.fieldNameIndex("dose_cumulative")
-        speed_idx = self._layer.fieldNameIndex("speed_kmph")
-        time_local_idx = self._layer.fieldNameIndex("time_local")
-        datetime_idx = self._layer.fieldNameIndex("date_time")
+        field_idx = {}
+        for name in [ "dose_increment",
+                      "time_cumulative",
+                      "dose_cumulative",
+                      "speed_kmph",
+                      "time_local",
+                      "date_time"]:
+            field_idx[name] = self._layer.fieldNameIndex(name)
 
         prev = None     # previous feature
 
@@ -763,21 +775,33 @@ class SafecastLayerHelper(object):
             self._plot[1].append(ader)
 
             # update attributes
-            attrs = { dose_inc_idx: dose_inc,
-                      time_cum_idx: td2str(timedelta(hours=time_cum)),
-                      dose_cum_idx: dose_cum,
-                      speed_idx: speed,
-                      time_local_idx: time_local,
+            attrs = { "dose_increment" : dose_inc,
+                      "time_cumulative": td2str(timedelta(hours=time_cum)),
+                      "dose_cumulative": dose_cum,
+                      "speed_kmph": speed,
+                      "time_local": time_local,
             }
             if newdt:
-                attrs[datetime_idx] = feat_datetime
+                attrs["date_time"] = feat_datetime
 
             count += 1
             if only_stats:
                 continue
 
-            for idx, value in attrs.items():
-                self._layer.changeAttributeValue(feat.id(), idx, value)
+            if connCur:
+                sql = "UPDATE \"{}\" SET".format(self._layer.name())
+                for name, value in attrs.items():
+                    if not value:    # null
+                        continue
+                    if isinstance(value, str): # time
+                        value = "'{}'".format(value)
+                    sql += " {}={},".format(name, value)
+                sql = sql[:-1] # remove last comma
+                sql += " WHERE ogc_fid = {}".format(feat.id())
+                connCur.execute(sql)
+            else:
+                for name, value in attrs.items():
+                    self._layer.changeAttributeValue(feat.id(), field_idx[name], value)
 
         # update layer internal statistics
         if count > 0:
@@ -799,6 +823,9 @@ class SafecastLayerHelper(object):
 
         # save changes
         if not only_stats:
+            if conn:
+                conn.commit()
+                conn.close()
             self._layer.commitChanges()
             self._layer.setReadOnly(True)
 
