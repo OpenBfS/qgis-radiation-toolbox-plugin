@@ -6,6 +6,7 @@ Read the file LICENCE.md for details.
 
 .. sectionauthor:: Martin Landa <martin.landa opengeolabs.cz>
 """
+from builtins import object
 
 import os
 import csv
@@ -15,7 +16,7 @@ from datetime import datetime
 from .exception import SafecastReaderError
 from .logger import SafecastReaderLogger
 
-class SafecastReader:
+class SafecastReader(object):
     def __init__(self, filename=None):
         """Constructor.
 
@@ -53,7 +54,7 @@ class SafecastReader:
 
         :return: list of processed items
         """
-        return csv.reader(filter(lambda row: row[0]!='#', self._fd))
+        return csv.reader([row for row in self._fd if row[0]!='#'])
     
     def _read_header(self):
         """Read LOG header and store metadata items.

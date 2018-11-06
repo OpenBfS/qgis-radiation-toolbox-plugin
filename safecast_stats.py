@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QTreeWidget, QTreeWidgetItem
+from qgis.PyQt.QtWidgets import QTreeWidget, QTreeWidgetItem
 
 class SafecastStats(QTreeWidget):
     def addParent(self, parent, title):
@@ -16,7 +16,7 @@ class SafecastStats(QTreeWidget):
         self.clear()
 
         root = self.invisibleRootItem()
-        for label in data.keys():
+        for label in list(data.keys()):
             item = self.addParent(root, label)
             for key, value in data[label]:
                 self.addChild(item, '{}: {}'.format(key, value))

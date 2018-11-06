@@ -26,12 +26,11 @@ import logging
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-from PyQt4 import QtGui, uic
-from PyQt4.QtGui import QFileDialog, QMessageBox, QToolBar, QGridLayout, QLabel, \
-    QSpacerItem, QSizePolicy, QAction
-from PyQt4.QtCore import QSignalMapper, SIGNAL, SLOT, pyqtSignal, QSettings
+from qgis.PyQt import QtGui, uic
+from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox, QToolBar, QGridLayout, QLabel, QSpacerItem, QSizePolicy, QAction, QDockWidget
+from qgis.PyQt.QtCore import pyqtSignal, QSettings, QSignalMapper
 
-from qgis.core import QgsMapLayerRegistry, QgsProject, QgsRasterLayer
+from qgis.core import QgsProject, QgsRasterLayer
 from qgis.gui import QgsMessageBar
 from qgis.utils import iface
 
@@ -62,7 +61,7 @@ class SafecastError(Exception):
     """
     pass
 
-class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
+class SafecastDockWidget(QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
 
@@ -120,24 +119,15 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                 
         self.toolbarLayout.insertWidget(0, self._mToolbar)
         
-        self.connect(self.actionImport,
-                     SIGNAL("triggered()"), self.onLoad)
-        self.connect(self.actionSave,
-                     SIGNAL("triggered()"), self.onSave)
-        self.connect(self.actionSelect,
-                     SIGNAL("triggered()"), self.onSelect)
-        self.connect(self.actionDeselect,
-                     SIGNAL("triggered()"), self.onDeselect)
-        self.connect(self.actionDelete,
-                     SIGNAL("triggered()"), self.onDelete)
-        self.connect(self.styleButton,
-                     SIGNAL("clicked()"), self.onStyle)
-        self.connect(self.plotStyleCombo,
-                     SIGNAL("currentIndexChanged(int)"), self.onPlotStyle)
-        self.connect(self.storageCombo,
-                     SIGNAL("currentIndexChanged(int)"), self.onStorageFormat)
-        self.connect(self.onlineMapsButton,
-                     SIGNAL("clicked()"), self.onAddOnlineMap)
+        self.actionImport.triggered.connect(self.onLoad)
+        self.actionSave.triggered.connect(self.onSave)
+        self.actionSelect.triggered.connect(self.onSelect)
+        self.actionDeselect.triggered.connect(self.onDeselect)
+        self.actionDelete.triggered.connect(self.onDelete)
+        self.styleButton.clicked.connect(self.onStyle)
+        self.plotStyleCombo.currentIndexChanged.connect(self.onPlotStyle)
+        self.storageCombo.currentIndexChanged.connect(self.onStorageFormat)
+        self.onlineMapsButton.clicked.connect(self.onAddOnlineMap)
 
     def _loadSettings(self):
         """Load settings."""
@@ -303,7 +293,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
         sender = 'safecast-{}-lastUserFilePath'.format(self.sender().objectName())
         lastPath = self._settings.value(sender, '')
 
-        filePath = QFileDialog.getOpenFileName(self, self.tr("Load Safecast LOG file"),
+        filePath, __ = QFileDialog.getOpenFileName(self, self.tr("Load Safecast LOG file"),
                                                lastPath, self.tr("LOG file (*.LOG)"))
         if not filePath:
             # action canceled
@@ -331,7 +321,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
             layer.setAliases() # loadNameStyle removes aliases (why?)
 
             # add map layer to the canvas (do not add into TOC)
-            QgsMapLayerRegistry.instance().addMapLayer(layer, False)
+            QgsProject.instance().addMapLayer(layer, False)
             # force register layer in TOC as a first item
             QgsProject.instance().layerTreeRoot().insertLayer(0, layer)
             # select this layer (this must be done manually since we
@@ -420,7 +410,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                 )
 
         # overwrite check disabled because of possible missing file extension
-        filePath = QFileDialog.getSaveFileName(self, self.tr("Save layer as new LOG file"),
+        filePath, __ = QFileDialog.getSaveFileName(self, self.tr("Save layer as new LOG file"),
                                                os.path.join(
                                                    helper.path() if layer else ".",
                                                    helper.filename() + '_mod.LOG'
@@ -542,7 +532,7 @@ class SafecastDockWidget(QtGui.QDockWidget, FORM_CLASS):
                                name,
                                'wms'
         )
-        QgsMapLayerRegistry.instance().addMapLayer(layer, False)
+        QgsProject.instance().addMapLayer(layer, False)
         # force register layer in TOC as a last item
         QgsProject.instance().layerTreeRoot().insertLayer(-1, layer)
         # collapse layer

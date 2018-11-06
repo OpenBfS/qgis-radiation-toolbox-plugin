@@ -18,6 +18,10 @@
  *                                                                         *
  ***************************************************************************/
 """
+from builtins import hex
+from builtins import map
+from builtins import range
+from builtins import object
 
 import os
 import sys
@@ -27,13 +31,13 @@ from dateutil import tz
 
 import sqlite3
 
-from PyQt4.QtCore import QVariant
-from PyQt4.QtGui import QProgressBar
+from qgis.PyQt.QtCore import QVariant
+from qgis.PyQt.QtWidgets import QProgressBar
 
 from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
-    QgsGeometry, QgsPoint, QgsVectorFileWriter, QgsFields, \
+    QgsGeometry, QgsPointXY, QgsVectorFileWriter, QgsFields, \
     QgsCoordinateReferenceSystem, QgsMessageLog, QgsDistanceArea
-from qgis.utils import iface, QGis
+from qgis.utils import iface, Qgis
 from qgis.gui import QgsMessageBar
 
 from osgeo import ogr
@@ -41,7 +45,7 @@ from osgeo import ogr
 from .reader import SafecastReaderError
 
 def check_version(min_version=(2,18)):
-    version = map(int, QGis.QGIS_VERSION.split('.')[:2])
+    version = list(map(int, Qgis.QGIS_VERSION.split('.')[:2]))
     if version[0] >= min_version[0] and version[1] >= min_version[1]:
         return True
 
@@ -158,7 +162,7 @@ class SafecastLayer(QgsVectorLayer):
             aliases.insert(0, self.tr("FID"))
 
         for i in range(0, len(aliases)):
-            self.addAttributeAlias(i, aliases[i])
+            self.setFieldAlias(i, aliases[i])
 
     def load(self, reader):
         """Load LOG file using specified reader.
@@ -181,7 +185,7 @@ class SafecastLayer(QgsVectorLayer):
         progress = QProgressBar()
         progress.setMaximum(100)
         progressMessageBar.layout().addWidget(progress)
-        iface.messageBar().pushWidget(progressMessageBar, iface.messageBar().INFO)
+        iface.messageBar().pushWidget(progressMessageBar, Qgis.Info)
 
         # load items as new point features (inform user about progress)
         i = 0
@@ -200,7 +204,7 @@ class SafecastLayer(QgsVectorLayer):
             feat = self._processRow(f, i, prev) # process feature
             if feat:
                 prev = feat # remember feature for a next run
-                feat.setFeatureId(i)
+                feat.setId(i)
                 self.addFeature(feat)
 
             if i % 100 == 0:
@@ -221,7 +225,7 @@ class SafecastLayer(QgsVectorLayer):
                 duration=5
             )
 
-            for attr in self._errs.keys():
+            for attr in list(self._errs.keys()):
                 QgsMessageLog.logMessage(
                     "{}: {} measurement(s) skipped (invalid {})".format(
                         self.fileName, self._errs[attr], attr
@@ -243,7 +247,7 @@ class SafecastLayer(QgsVectorLayer):
         iface.messageBar().pushMessage(
             self.tr("Info"),
             self.tr("{} features loaded (in {:.2f} sec).").format(self.featureCount(), endtime),
-            level=QgsMessageBar.INFO,
+            level=Qgis.Info,
             duration=3
         )
 
@@ -277,12 +281,12 @@ class SafecastLayer(QgsVectorLayer):
         if layer is None:
             layer = ds.CreateLayer(layer_name, None, ogr.wkbNone)
         layer_defn = layer.GetLayerDefn()
-        for key in self.metadata.keys():
+        for key in list(self.metadata.keys()):
             field = ogr.FieldDefn(key, ogr.OFTString)
             layer.CreateField(field)
 
         feat = ogr.Feature(layer_defn)
-        for key, value in self.metadata.items():
+        for key, value in list(self.metadata.items()):
             feat.SetField(key, value)
         layer.CreateFeature(feat)
         feat = None
@@ -328,7 +332,7 @@ class SafecastLayer(QgsVectorLayer):
         # set coordinates
         y = coords_float(row[7], row[8])
         x = coords_float(row[9], row[10])
-        point = QgsPoint(x, y)
+        point = QgsPointXY(x, y)
 
         # check validity
         # drop data according
@@ -396,7 +400,7 @@ class SafecastLayer(QgsVectorLayer):
 
         # create new feature
         fet = QgsFeature()
-        fet.setGeometry(QgsGeometry.fromPoint(point))
+        fet.setGeometry(QgsGeometry.fromPointXY(point))
 
         # set attributes
         fet.setAttributes(row)
@@ -425,7 +429,7 @@ class SafecastLayerHelper(object):
 
         # create object for distance computation
         self._distance = QgsDistanceArea()
-        self._distance.setEllipsoidalMode(True)
+        ### self._distance.setEllipsoidalMode(True)
         self._distance.setEllipsoid('WGS84')
 
         # connects
@@ -675,7 +679,7 @@ class SafecastLayerHelper(object):
                       "speed_kmph",
                       "time_local",
                       "date_time"]:
-            field_idx[name] = self._layer.fieldNameIndex(name)
+            field_idx[name] = self._layer.dataProvider().fieldNameIndex(name)
 
         prev = None     # previous feature
 
@@ -790,7 +794,7 @@ class SafecastLayerHelper(object):
 
             if connCur:
                 sql = "UPDATE \"{}\" SET".format(self._layer.name())
-                for name, value in attrs.items():
+                for name, value in list(attrs.items()):
                     if not value:    # null
                         continue
                     if isinstance(value, str): # time
@@ -800,7 +804,7 @@ class SafecastLayerHelper(object):
                 sql += " WHERE ogc_fid = {}".format(feat.id())
                 connCur.execute(sql)
             else:
-                for name, value in attrs.items():
+                for name, value in list(attrs.items()):
                     self._layer.changeAttributeValue(feat.id(), field_idx[name], value)
 
         # update layer internal statistics

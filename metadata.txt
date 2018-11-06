@@ -8,7 +8,7 @@
 
 [general]
 name=Safecast Plugin (DEV)
-qgisMinimumVersion=2.14
+qgisMinimumVersion=3.0
 description=Plugin for loading data from Safecast radiation monitoring devices
 version=2.0alpha
 author=OpenGeoLabs s.r.o.

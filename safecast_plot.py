@@ -19,13 +19,14 @@
  ***************************************************************************/
 """
 
-from PyQt4 import Qt
+from qgis.PyQt import Qt
 try:
     import qwt as Qwt
     hasQwt5 = False
 except:
-    import PyQt4.Qwt5 as Qwt
-    hasQwt5 = True
+    from PyQt5 import Qwt
+    # hasQwt5 = True
+    hasQwt5 = False
 
 class SafecastAxis(Qwt.QwtPlotItem):
     """Supports a coordinate system similar to 

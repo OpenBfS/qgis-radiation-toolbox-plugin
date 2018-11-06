@@ -20,18 +20,21 @@
  *                                                                         *
  ***************************************************************************/
 """
+from __future__ import absolute_import
+from builtins import object
 
 import os.path
 
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from PyQt4.QtGui import QAction, QIcon, QToolButton
+from qgis.PyQt.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
+from qgis.PyQt.QtWidgets import QAction, QToolButton
+from qgis.PyQt.QtGui import QIcon
 # Initialize Qt resources from file resources.py
-import resources_rc
+from . import resources_rc
 
-from safecast_dockwidget import SafecastDockWidget
+from .safecast_dockwidget import SafecastDockWidget
 
 
-class Safecast:
+class Safecast(object):
     """QGIS Safecats Plugin Implementation."""
 
     def __init__(self, iface):
