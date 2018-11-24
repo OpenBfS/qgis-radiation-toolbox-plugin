@@ -32,7 +32,7 @@ from qgis.PyQt.QtCore import pyqtSignal, QSettings, QSignalMapper
 
 from qgis.core import QgsProject, QgsRasterLayer
 from qgis.gui import QgsMessageBar
-from qgis.utils import iface
+from qgis.utils import iface, Qgis
 
 from osgeo import ogr
 
@@ -45,7 +45,7 @@ try:
 except ImportError as e:
     plotMsg = "Plot functionality not available. Reason: {}".format(e)
     iface.messageBar().pushMessage("Safecast plugin", plotMsg,
-                                   level=QgsMessageBar.WARNING, duration=10)
+                                   level=Qgis.Warning, duration=10)
 
 # register logger handler
 hdlr = logging.StreamHandler()
@@ -326,9 +326,9 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
             QgsProject.instance().layerTreeRoot().insertLayer(0, layer)
             # select this layer (this must be done manually since we
             # are inserting item into layer tree)
-            iface.legendInterface().setCurrentLayer(layer)
+            iface.layerTreeView().setCurrentLayer(layer)
             # expand layer
-            iface.legendInterface().setLayerExpanded(layer, True)
+            iface.layerTreeView().currentNode().setExpanded(True)
         except (SafecastError, SafecastReaderError) as e:
             # show error message on failure
             iface.messageBar().clearWidgets()
@@ -495,7 +495,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
                 iface.messageBar().pushMessage(
                     self.tr("Info"),
                     self.tr("Updating attributes..."),
-                    level=QgsMessageBar.INFO,
+                    level=Qgis.Info,
                     duration=1
                 )
                 layer.setReadOnly(False)
@@ -510,7 +510,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         else:
             # inform user - no features selected, nothing to be deleted
             iface.messageBar().pushMessage(self.tr("Info"), self.tr("No features selected. Nothing to be deleled."),
-                                           level=QgsMessageBar.INFO, duration=3)
+                                           level=Qgis.Info, duration=3)
             # disable deselect/delete buttons
             self.actionDeselect.setEnabled(False)
             self.actionDelete.setEnabled(False)
@@ -534,9 +534,9 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         )
         QgsProject.instance().addMapLayer(layer, False)
         # force register layer in TOC as a last item
-        QgsProject.instance().layerTreeRoot().insertLayer(-1, layer)
+        node = QgsProject.instance().layerTreeRoot().insertLayer(-1, layer)
         # collapse layer
-        iface.legendInterface().setLayerExpanded(layer, False)
+        node.setExpanded(False)
 
     def getActiveLayer(self):
         """Get currently selected (active) layer.
@@ -549,7 +549,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
                 raise SafecastError(self.tr("No layer loaded or selected"))
         except SafecastError as e:
             iface.messageBar().pushMessage(self.tr("Info"), self.tr("No active layer available."),
-                                           level=QgsMessageBar.INFO, duration=3)
+                                           level=Qgis.Info, duration=3)
             return None
 
         return layer
@@ -568,7 +568,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
             helper = None
             # iface.messageBar().pushMessage(self.tr("Warning"),
             #                                self.tr("Unable to retrieve Safecast data for selected layer"),
-            #                                level=QgsMessageBar.WARNING, duration=5)
+            #                                level=Qgis.Warning, duration=5)
         return helper
 
     def updateStats(self, layer):
@@ -637,7 +637,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
             iface.messageBar().pushMessage(
                 self.tr("Info"),
                 self.tr("Updating statistics for {}...".format(layer.name())),
-                level=QgsMessageBar.INFO,
+                level=Qgis.Info,
                 duration=3
             )
 
