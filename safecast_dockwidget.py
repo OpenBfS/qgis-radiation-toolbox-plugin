@@ -332,10 +332,10 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         except (SafecastError, SafecastReaderError) as e:
             # show error message on failure
             iface.messageBar().clearWidgets()
-            QMessageBox.critical(None, self.tr("Error"),
-                                 self.tr("Failed to load input file '{0}'.\n\nDetails: {1}").format(
-                                     filePath, e), QMessageBox.Abort
-            )
+            iface.messageBar().pushMessage(self.tr("Critical"),
+                                           self.tr("Failed to load input file '{0}'.\n\nDetails: {1}").format(
+                                               filePath, e),
+                                           level=Qgis.Critical, duration=10)
             return
 
         # enable save, select, style buttons when new layer is
