@@ -411,12 +411,12 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
 
         # overwrite check disabled because of possible missing file extension
         filePath, __ = QFileDialog.getSaveFileName(self, self.tr("Save layer as new LOG file"),
-                                               os.path.join(
-                                                   helper.path() if layer else ".",
-                                                   helper.filename() + '_mod.LOG'
-                                               ),
-                                               self.tr("LOG file (*.LOG)"),
-                                               QFileDialog.DontConfirmOverwrite)
+                                                   os.path.join(
+                                                       helper.path() if layer else ".",
+                                                       helper.filename() + '_mod.LOG'
+                                                   ),
+                                                   self.tr("LOG file (*.LOG)"),
+                                                   options=QFileDialog.DontConfirmOverwrite)
         if not filePath:
             # action canceled
             return
