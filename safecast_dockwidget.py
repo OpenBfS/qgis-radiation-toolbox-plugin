@@ -486,9 +486,9 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
             reply = QMessageBox.question(self, self.tr("Delete?"),
                                          self.tr("Do you want to delete {} selected features? "
                                                  "This operation cannot be reverted.").format(count),
-                                         QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
+                                         QMessageBox.Yes, QMessageBox.No)
 
-            if reply == QtGui.QMessageBox.Yes:
+            if reply == QMessageBox.Yes:
                 # delete selected features from currently selected layer
                 iface.messageBar().pushMessage(
                     self.tr("Info"),
