@@ -462,10 +462,8 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         """Deselect features action."""
         layer = self.getActiveLayer()
         if layer:
-            # deselect features manually (there is no trigger
-            # available) if requested
-            layer.setSelectedFeatures([feat.id() 
-                                       for feat in layer.selectedFeaturesIterator() if feat.id() < 0])
+            layer.removeSelection()
+
         # disable deselect/delete buttons
         self.actionDeselect.setEnabled(False)
         self.actionDelete.setEnabled(False)
