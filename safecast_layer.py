@@ -245,9 +245,9 @@ class SafecastLayer(QgsVectorLayer):
 
         # inform user about successful import
         iface.messageBar().pushMessage(
-            self.tr("Info"),
+            self.tr("Success"),
             self.tr("{} features loaded (in {:.2f} sec).").format(self.featureCount(), endtime),
-            level=Qgis.Info,
+            level=Qgis.Success,
             duration=3
         )
 
