@@ -259,16 +259,17 @@ class SafecastLayer(QgsVectorLayer):
 
     def _writeToSQLite(self):
         filePath = os.path.splitext(self.fileName)[0] + '.sqlite'
-        writer = QgsVectorFileWriter.writeAsVectorFormat(
+        writer, msg = QgsVectorFileWriter.writeAsVectorFormat(
             self,
             filePath,
             self._provider.encoding(),
             self._provider.crs(),
-            "SQLite"
+            driverName="SQLite"
         )
-        # TODO: QgsVectorFileWriter.WriterError
-        if writer != 0:
-            raise SafecastReaderError(self.tr("Unable to create SQLite datasource"))
+        if writer != QgsVectorFileWriter.NoError:
+            raise SafecastReaderError(
+                self.tr("Unable to create SQLite datasource: {}").format(msg)
+            )
 
         # set datasource to SQLite DB
         self.setDataSource(filePath, self._layerName, self.storageFormat)
