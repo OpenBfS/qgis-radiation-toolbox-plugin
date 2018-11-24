@@ -20,13 +20,7 @@
 """
 
 from qgis.PyQt import Qt
-try:
-    import qwt as Qwt
-    hasQwt5 = False
-except:
-    from PyQt5 import Qwt
-    # hasQwt5 = True
-    hasQwt5 = False
+from PyQt5 import Qwt
 
 class SafecastAxis(Qwt.QwtPlotItem):
     """Supports a coordinate system similar to 
@@ -42,14 +36,10 @@ class SafecastAxis(Qwt.QwtPlotItem):
         """
         Qwt.QwtPlotItem.__init__(self)
         self.__axis = masterAxis
-        if hasQwt5:
-            fn = self.setAxis
-        else:
-            fn = self.setAxes
         if masterAxis in (Qwt.QwtPlot.yLeft, Qwt.QwtPlot.yRight):
-            fn(slaveAxis, masterAxis)
+            self.setAxes(slaveAxis, masterAxis)
         else:
-            fn(masterAxis, slaveAxis)
+            self.setAxes(masterAxis, slaveAxis)
         self.scaleDraw = Qwt.QwtScaleDraw()
         self.scaleDraw.setAlignment((Qwt.QwtScaleDraw.LeftScale,
                                      Qwt.QwtScaleDraw.RightScale,
@@ -60,16 +50,10 @@ class SafecastAxis(Qwt.QwtPlotItem):
         """Draw an axis on the plot canvas
         """
         if self.__axis in (Qwt.QwtPlot.yLeft, Qwt.QwtPlot.yRight):
-            if hasQwt5:
-                self.scaleDraw.move(round(xMap.xTransform(0.0)), yMap.p2())
-            else:
-                self.scaleDraw.move(round(xMap.transform(0.0)), yMap.p2())
+            self.scaleDraw.move(round(xMap.transform(0.0)), yMap.p2())
             self.scaleDraw.setLength(yMap.p1()-yMap.p2())
         elif self.__axis in (Qwt.QwtPlot.xBottom, Qwt.QwtPlot.xTop):
-            if hasQwt5:
-                self.scaleDraw.move(xMap.p1(), round(yMap.xTransform(0.0)))
-            else:
-                self.scaleDraw.move(xMap.p1(), round(yMap.transform(0.0)))
+            self.scaleDraw.move(xMap.p1(), round(yMap.transform(0.0)))
             self.scaleDraw.setLength(xMap.p2()-xMap.p1())
         self.scaleDraw.setScaleDiv(self.plot().axisScaleDiv(self.__axis))
         self.scaleDraw.draw(painter, self.plot().palette())
@@ -88,8 +72,6 @@ class SafecastPlot(Qwt.QwtPlot):
         self.setCanvasBackground(Qt.Qt.white)
 
         # set plot layout
-        if hasQwt5:
-            self.plotLayout().setMargin(0)
         self.plotLayout().setCanvasMargin(0)
         self.plotLayout().setAlignCanvasToScales(True)
         # attach a grid
@@ -119,12 +101,9 @@ class SafecastPlot(Qwt.QwtPlot):
         x, y = layer.plotData()
 
         # clear plot first & detach curve
-        if hasQwt5:
-            self.clear()
-        else:
-            self.detachItems([Qwt.QwtPlotItem.Rtti_PlotItem], True)
-            if self.curve:
-                self.curve.detach()
+        self.detachItems(Qwt.QwtPlotItem.Rtti_PlotItem, True)
+        if self.curve:
+            self.curve.detach()
 
         # attach a curve
         self.curve = Qwt.QwtPlotCurve('ader_microSvh')
@@ -139,7 +118,7 @@ class SafecastPlot(Qwt.QwtPlot):
                                                Qt.QPen(Qt.Qt.blue),
                                                Qt.QSize(5, 5)))
 
-        self.curve.setData(x, y)
+        self.curve.setSamples(x, y)
 
         self.replot()
 
