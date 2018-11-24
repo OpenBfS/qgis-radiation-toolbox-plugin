@@ -102,8 +102,6 @@ class SafecastPlot(Qwt.QwtPlot):
 
         # clear plot first & detach curve
         self.detachItems(Qwt.QwtPlotItem.Rtti_PlotItem, True)
-        if self.curve:
-            self.curve.detach()
 
         # attach a curve
         self.curve = Qwt.QwtPlotCurve('ader_microSvh')
