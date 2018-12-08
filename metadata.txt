@@ -30,7 +30,7 @@ tags=vector,safecast
 
 homepage=https://opengeolabs.github.io/qgis-safecast-plugin/
 category=Plugins
-icon=icon-dev.png
+icon=icons/plugin_icon.png
 # experimental flag
 experimental=True
 

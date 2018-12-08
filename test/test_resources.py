@@ -31,7 +31,7 @@ class SafecastDialogTest(unittest.TestCase):
 
     def test_icon_png(self):
         """Test we can click OK."""
-        path = ':/plugins/Safecast/icon-dev.png'
+        path = ':/plugins/Safecast/plugin_icon.png'
         icon = QIcon(path)
         self.assertFalse(icon.isNull())
 

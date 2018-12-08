@@ -47,7 +47,7 @@ PY_FILES = \
 
 UI_FILES = safecast_dockwidget_base.ui
 
-EXTRAS = metadata.txt icon-dev.png
+EXTRAS = metadata.txt plugin_icon.png
 
 COMPILED_RESOURCE_FILES = resources_rc.py
 
