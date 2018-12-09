@@ -26,7 +26,7 @@ from builtins import object
 import os.path
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from qgis.PyQt.QtWidgets import QAction, QToolButton
+from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtGui import QIcon
 # Initialize Qt resources from file resources.py
 from . import resources_rc
@@ -68,9 +68,6 @@ class Safecast(object):
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Safecast')
-
-        # add plugin icon into plugin toolbar
-        self.toolButton = QToolButton()
 
         self.pluginIsActive = False
         self.dockwidget = None
@@ -154,8 +151,7 @@ class Safecast(object):
             action.setWhatsThis(whats_this)
 
         if add_to_toolbar:
-            self.toolButton.setDefaultAction(action)
-            self.iface.addToolBarWidget(self.toolButton)
+            self.iface.addToolBarIcon(action)
 
         if add_to_menu:
             self.iface.addPluginToMenu(
