@@ -1,6 +1,6 @@
-"""Safecast Reader Library
+"""Reader Library
 
-(C) 2015-2016 by OpenGeoLabs s.r.o.
+(C) 2015-2019 by OpenGeoLabs s.r.o.
 
 Read the file LICENCE.md for details.
 
@@ -86,4 +86,4 @@ class LoggerManager(with_metaclass(Singleton, object)):
             LoggerManager._loggers[name] = logging.getLogger(str(name))
         return LoggerManager._loggers[name]
 
-SafecastReaderLogger=LoggerManager().getLogger("SafeCastImporter")
+ReaderLogger=LoggerManager().getLogger("RadiationToolboxImporter")

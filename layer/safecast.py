@@ -41,14 +41,8 @@ from qgis.utils import iface, Qgis
 
 from osgeo import ogr
 
-from .reader.exceptions import SafecastReaderError
-
-def check_version(min_version=(2,18)):
-    version = list(map(int, Qgis.QGIS_VERSION.split('.')[:2]))
-    if version[0] >= min_version[0] and version[1] >= min_version[1]:
-        return True
-
-    return False
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from reader.exceptions import ReaderError
 
 class SafecastWriterError(Exception):
     """Safecast writer error class.
@@ -166,7 +160,7 @@ class SafecastLayer(QgsVectorLayer):
     def load(self, reader):
         """Load LOG file using specified reader.
 
-        SafecastReaderError is raised on failure.
+        ReaderError is raised on failure.
 
         :param reader: reader class used for reading input data
         """
@@ -266,7 +260,7 @@ class SafecastLayer(QgsVectorLayer):
             driverName="SQLite"
         )
         if writer != QgsVectorFileWriter.NoError:
-            raise SafecastReaderError(
+            raise ReaderError(
                 self.tr("Unable to create SQLite datasource: {}").format(msg)
             )
 
@@ -323,7 +317,9 @@ class SafecastLayer(QgsVectorLayer):
             return val
 
         if len(row) != self._validNumAttrbs:
-            raise SafecastReaderError(self.tr("Failed to read input data. Line: {}").format(','.join(row)))
+            raise ReaderError(
+                self.tr("Failed to read input data. Line: {}").format(','.join(row))
+            )
 
         # force to split last item (hdop & checksum)
         row[-1], newitem = row[-1].split('*', 1)
@@ -484,7 +480,7 @@ class SafecastLayerHelper(object):
                     metadata[name] = value
             ds = None
         except:
-            raise SafecastReaderError(
+            raise ReaderError(
                 self.tr("Unable to retrive Safecast metadata for selected layer")
             )
 
@@ -665,7 +661,7 @@ class SafecastLayerHelper(object):
         ### switch from QGIS API to SQLite3 API, see
         ### https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/27/updating-attributes-takes-several-minutes
         conn = connCur = None
-        if check_version() and self._storageFormat == "ogr":
+        if self._storageFormat == "ogr":
             idx = 1 # skip FID column for SQLite storage
             conn = sqlite3.connect(self._layer.dataProvider().dataSourceUri().split('|')[0])
             connCur = conn.cursor()

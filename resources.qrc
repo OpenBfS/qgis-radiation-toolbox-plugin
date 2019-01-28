@@ -1,5 +1,5 @@
 <RCC>
-  <qresource prefix="/plugins/Safecast">
+  <qresource prefix="/plugins/RadiationToolbox">
     <file>icons/tool_cut_deselect.png</file>
     <file>icons/tool_cut.png</file>
     <file>icons/tool_delete.png</file>

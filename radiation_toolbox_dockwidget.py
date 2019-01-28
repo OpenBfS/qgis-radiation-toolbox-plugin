@@ -26,8 +26,7 @@ import logging
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-from qgis.PyQt import QtGui, uic
-from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox, QToolBar, QGridLayout, QLabel, QSpacerItem, QSizePolicy, QAction, QDockWidget
+from qgis.PyQt import QtGui, QtWidgets, uic
 from qgis.PyQt.QtCore import pyqtSignal, QSettings, QSignalMapper
 
 from qgis.core import QgsProject, QgsRasterLayer
@@ -35,34 +34,37 @@ from qgis.utils import iface, Qgis
 
 from osgeo import ogr
 
-from .reader.safecast import SafecastReader
-from .reader.exceptions import SafecastReaderError
-from .reader.logger import SafecastReaderLogger
-from .safecast_layer import SafecastLayer, SafecastWriterError, SafecastLayerHelper
+from .plugin_type import PLUGIN_TYPE, PLUGIN_NAME, PluginType
+from .reader.exceptions import ReaderError
+from .reader.logger import ReaderLogger
 from .safecast_stats import SafecastStats
 try:
     from .safecast_plot import SafecastPlot
     plotMsg = None
 except ImportError as e:
     plotMsg = "Plot functionality not available. Reason: {}".format(e)
-    iface.messageBar().pushMessage("Safecast plugin", plotMsg,
-                                   level=Qgis.Warning, duration=10)
+    iface.messageBar().pushMessage(
+        PLUGIN_NAME,
+        plotMsg,
+        level=Qgis.Warning,
+        duration=10
+    )
 
 # register logger handler
 hdlr = logging.StreamHandler()
 # set logger level
-SafecastReaderLogger.setLevel(level=logging.INFO)
-SafecastReaderLogger.addHandler(hdlr)
+ReaderLogger.setLevel(level=logging.INFO)
+ReaderLogger.addHandler(hdlr)
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'safecast_dockwidget_base.ui'))
+    os.path.dirname(__file__), 'radiation_toolbox_dockwidget_base.ui'))
 
-class SafecastError(Exception):
-    """Safecast generic error class.
+class RadiationToolboxError(Exception):
+    """RadiationToolbox generic error class.
     """
     pass
 
-class SafecastDockWidget(QDockWidget, FORM_CLASS):
+class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     closingPlugin = pyqtSignal()
 
@@ -71,14 +73,15 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
 
         :param parent: parent class or None
         """
-        super(SafecastDockWidget, self).__init__(parent)
+        super(RadiationToolboxDockWidget, self).__init__(parent)
         self.setupUi(self)
+        self.setWindowTitle(PLUGIN_NAME)
 
         # connect ui with functions
         self._createToolbarAndConnect()
 
         # actions
-        self.actionUpdateStatsPlot = QAction("UpdateStatsPlot", self)
+        self.actionUpdateStatsPlot = QtWidgets.QAction("UpdateStatsPlot", self)
 
         # generic connects
         iface.currentLayerChanged.connect(self.onUpdatePlugin)
@@ -97,14 +100,22 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         self._layers = {}
 
         # settings
-        self._settings = QSettings()
+        self._settings = QSettings("OpenGeoLabs", PLUGIN_NAME)
         self._loadSettings()
 
+        # collect supported file extensions
+        if PLUGIN_TYPE == PluginType.Dev:
+            self._supported_ext = ("log", "ers", "pei")
+        elif PLUGIN_TYPE == PluginType.RT:
+            self._supported_ext = ("ers", "pei")
+        else:
+            self._supported_ext = ("log")
+        
     def _createToolbarAndConnect(self):
         """Create toolbar and connect tools."""
         self.signalMapper = QSignalMapper(self)
 
-        self._mToolbar = QToolBar(self)
+        self._mToolbar = QtWidgets.QToolBar(self)
         self._mToolbar.addAction(self.actionImport)
         self._mToolbar.addAction(self.actionSave)
         self._mToolbar.addSeparator()
@@ -117,7 +128,8 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         self.actionSelect.setEnabled(False)
         self.actionDeselect.setEnabled(False)
         self.actionDelete.setEnabled(False)
-                
+        self.styleButton.setEnabled(False)
+            
         self.toolbarLayout.insertWidget(0, self._mToolbar)
         
         self.actionImport.triggered.connect(self.onLoad)
@@ -133,10 +145,10 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
     def _loadSettings(self):
         """Load settings."""
         # storage format
-        sender = 'safecast-{}-lastCurrentIndex'.format(self.storageCombo.objectName())
+        sender = '{}-lastCurrentIndex'.format(self.storageCombo.objectName())
         self.storageCombo.setCurrentIndex(int(self._settings.value(sender, 0)))
         # plot style
-        sender = 'safecast-{}-lastCurrentIndex'.format(self.plotStyleCombo.objectName())
+        sender = '{}-lastCurrentIndex'.format(self.plotStyleCombo.objectName())
         self.plotStyleCombo.setCurrentIndex(int(self._settings.value(sender, 0)))
 
     def _initStyles(self):
@@ -158,18 +170,20 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         """
         # use grid layout
         if not hasattr(self, "_statsLayout"):
-            self._statsLayout = QGridLayout(self.groupStats)
+            self._statsLayout = QtWidgets.QGridLayout(self.groupStats)
 
         if not hasattr(self, "_statsWidget"):
             self._statsWidget = SafecastStats(self.groupStats)
             self._statsWidget.setHeaderHidden(True)
 
         if not hasattr(self, "_statsLabel"):
-            self._statsLabel = QLabel(
+            self._statsLabel = QtWidgets.QLabel(
                 self.tr("Load or select Safecast layer in order to display ader statistics."),
                 self.groupStats
             )
-            self._statsSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+            self._statsSpacer = QtWidgets.QSpacerItem(
+                20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
+            )
 
             self._statsLayout.addWidget(self._statsLabel)
             self._statsLayout.addItem(self._statsSpacer)
@@ -209,7 +223,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         """
         # use grid layout if not defined
         if not hasattr(self, "_plotLayout"):
-            self._plotLayout = QGridLayout(self.groupPlot)
+            self._plotLayout = QtWidgets.QGridLayout(self.groupPlot)
 
         # create new plot widget
         if not hasattr(self, "_plotWidget") and not plotMsg:
@@ -217,10 +231,12 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
             self._plotWidget.setVisible(False)
 
         if not hasattr(self, "_plotLabel"):
-            self._plotLabel = QLabel(
+            self._plotLabel = QtWidgets.QLabel(
                 self.tr("Load or select Safecast layer in order to display ader plot.")
                 if not plotMsg else plotMsg, self.groupPlot)
-            self._plotSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+            self._plotSpacer = QtWidgets.QSpacerItem(
+                20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
+            )
 
             self._plotLayout.addWidget(self._plotLabel)
             self._plotLayout.addItem(self._plotSpacer)
@@ -268,7 +284,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         styleName = self._styles[self.styleBox.currentIndex()]['file']
         stylePath = os.path.join(os.path.dirname(__file__), "styles", styleName + '.qml')
         if not os.path.isfile(stylePath):
-            raise SafecastError(self.tr("Style '{}' not found").format(styleName))
+            raise RadiationToolboxError(self.tr("Style '{}' not found").format(styleName))
 
         return stylePath
     
@@ -291,21 +307,21 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
 
         """
         # get last used directory/extension path from settings
-        senderPath = 'safecast-{}-lastUserFilePath'.format(self.sender().objectName())
+        senderPath = '{}-lastUserFilePath'.format(self.sender().objectName())
         lastPath = self._settings.value(senderPath, os.path.expanduser("~"))
-        senderExt = 'safecast-{}-lastUserFileExt'.format(self.sender().objectName())
-        lastExt = self._settings.value(senderExt, "log")
+        senderExt = '{}-lastUserFileExt'.format(self.sender().objectName())
+        lastExt = self._settings.value(senderExt, "log" if PLUGIN_TYPE != PluginType.RT else "ers").lower()
 
         fileMask = "{u} files (*.{u} *.{l})".format(u=lastExt.upper(), l=lastExt)
-        for ext in ("log", "ers", "pei"):
+        for ext in self._supported_ext:
             if ext in fileMask:
                 # already defined as default, skip
                 continue
             fileMask += ";;{u} files (*.{u} *.{l})".format(
                 u=ext.upper(), l=ext
             )
-        filePath, __ = QFileDialog.getOpenFileName(
-            self, self.tr("Load Safecast LOG file"),
+        filePath, __ = QtWidgets.QFileDialog.getOpenFileName(
+            self, self.tr("Load {} file").format(lastExt.upper()),
             lastPath,
             self.tr(fileMask)
         )
@@ -317,10 +333,13 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         storageFormat = 'ogr' if self.storageCombo.currentIndex() == 0 else 'memory'
 
         filePath = os.path.normpath(filePath)
-        fileExt = os.path.splitext(filePath)[1][1:] # remove '.'
+        fileExt = os.path.splitext(filePath)[1][1:].lower() # remove '.'
         helper = None
 
-        if fileExt == 'LOG':
+        if fileExt == 'log':
+            from .reader.safecast import SafecastReader
+            from .layer.safecast import SafecastLayer, SafecastLayerHelper
+            
             # create reader for input data
             reader = SafecastReader(filePath)
             # create new QGIS map layer (read-only)
@@ -355,7 +374,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
                 # set style
                 layer.loadNamedStyle(self.stylePath())
                 layer.setAliases() # loadNameStyle removes aliases (why?)
-        except (SafecastError, SafecastReaderError) as e:
+        except (RadiationToolboxError, ReaderError) as e:
             # show error message on failure
             iface.messageBar().clearWidgets()
             iface.messageBar().pushMessage(self.tr("Critical"),
@@ -376,7 +395,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
 
         # enable save, select, style buttons when new layer is
         # successfully loaded
-        if fileExt == 'LOG' and not self.actionSave.isEnabled():
+        if fileExt == 'log' and not self.actionSave.isEnabled():
             self.actionSave.setEnabled(True)
             self.actionSelect.setEnabled(True)
             self.styleButton.setEnabled(True)
@@ -392,7 +411,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         """Plot style changed.
         """
         # remember style
-        sender = 'safecast-{}-lastCurrentIndex'.format(self.sender().objectName())
+        sender = '{}-lastCurrentIndex'.format(self.sender().objectName())
         self._settings.setValue(sender, idx)
 
         layer = self.getActiveLayer()
@@ -417,11 +436,12 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         try:
             layer.loadNamedStyle(self.stylePath())
             layer.setAliases() # loadNameStyle removes aliases (why?)
-        except SafecastError as e:
+        except RadiationToolboxError as e:
             # print error message on failure
-            QMessageBox.critical(None, self.tr("Error"),
-                                 self.tr("Failed to apply style: {0}").format(
-                                     e), QMessageBox.Abort
+            QtWidgets.QMessageBox.critical(
+                None, self.tr("Error"),
+                self.tr("Failed to apply style: {0}").format(e),
+                QtWidgets.QMessageBox.Abort
             )
 
         # If caching is enabled, a simple canvas refresh might not be sufficient
@@ -441,19 +461,22 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         layer = self.getActiveLayer()
         helper = self._getLayerHelper(layer)
         if not helper:
-                QMessageBox.critical(None, self.tr("Error"),
-                                     self.tr("Invalid Safecast layer"),
-                                     QMessageBox.Abort
-                )
+            QtWidgets.QMessageBox.critical(
+                None, self.tr("Error"),
+                self.tr("Invalid Safecast layer"),
+                QtWidgets.QMessageBox.Abort
+            )
 
         # overwrite check disabled because of possible missing file extension
-        filePath, __ = QFileDialog.getSaveFileName(self, self.tr("Save layer as new LOG file"),
-                                                   os.path.join(
-                                                       helper.path() if layer else ".",
-                                                       helper.filename() + '_mod.LOG'
-                                                   ),
-                                                   self.tr("LOG file (*.LOG)"),
-                                                   options=QFileDialog.DontConfirmOverwrite)
+        filePath, __ = QtWidgets.QFileDialog.getSaveFileName(
+            self, self.tr("Save layer as new LOG file"),
+            os.path.join(
+                helper.path() if layer else ".",
+                helper.filename() + '_mod.LOG'
+            ),
+            self.tr("LOG file (*.LOG)"),
+            options=QtWidgets.QFileDialog.DontConfirmOverwrite
+        )
         if not filePath:
             # action canceled
             return
@@ -464,21 +487,24 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
 
         if os.path.exists(filePath):
             # check if the file already exists
-            reply = QMessageBox.question(self, self.tr("Overwrite?"),
-                                         self.tr("File {} already exists. "
-                                                 "Do you want to overwrite it?.").format(filePath),
-                                         QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
-            if reply != QtGui.QMessageBox.Yes:
+            reply = QtWidgets.QMessageBox.question(
+                self, self.tr("Overwrite?"),
+                self.tr("File {} already exists. "
+                        "Do you want to overwrite it?.").format(filePath),
+                QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+            if reply != QtWidgets.QMessageBox.Yes:
                 return
 
         if layer:
+            from .layer.safecast import SafecastWriterError
             try:
                 # export layer to LOG file
                 helper.save(filePath)
             except SafecastWriterError as e:
-                QMessageBox.critical(None, self.tr("Error"),
-                                     self.tr("Failed to save LOG file: {0}").format(
-                                         e), QMessageBox.Abort
+                QtWidgets.QMessageBox.critical(
+                    None, self.tr("Error"),
+                    self.tr("Failed to save LOG file: {0}").format(e),
+                    QtWidgets.QMessageBox.Abort
                 )
 
     def onSelect(self):
@@ -520,12 +546,13 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         count = layer.selectedFeatureCount()
         if count > 0:
             # ask if features should be really deleted (no undo avaialble)
-            reply = QMessageBox.question(self, self.tr("Delete?"),
-                                         self.tr("Do you want to delete {} selected features? "
-                                                 "This operation cannot be reverted.").format(count),
-                                         QMessageBox.Yes, QMessageBox.No)
+            reply = QtWidgets.QMessageBox.question(
+                self, self.tr("Delete?"),
+                self.tr("Do you want to delete {} selected features? "
+                        "This operation cannot be reverted.").format(count),
+                QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
-            if reply == QMessageBox.Yes:
+            if reply == QtWidgets.QMessageBox.Yes:
                 # delete selected features from currently selected layer
                 # iface.messageBar().pushMessage(
                 #     self.tr("Info"),
@@ -554,7 +581,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         """Storage format changed.
         """
         # remember current storage format
-        sender = 'safecast-{}-lastCurrentIndex'.format(self.sender().objectName())
+        sender = '{}-lastCurrentIndex'.format(self.sender().objectName())
         self._settings.setValue(sender, idx)
 
     def onAddOnlineMap(self):
@@ -581,8 +608,8 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         try:
             layer = iface.activeLayer()
             if not layer:
-                raise SafecastError(self.tr("No layer loaded or selected"))
-        except SafecastError as e:
+                raise RadiationToolboxError(self.tr("No layer loaded or selected"))
+        except RadiationToolboxError as e:
             iface.messageBar().pushMessage(self.tr("Info"), self.tr("No active layer available."),
                                            level=Qgis.Info, duration=3)
             return None
@@ -689,7 +716,9 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         layer = iface.activeLayer()
 
         # layer loaded from project
+        from .layer.safecast import SafecastLayer
         if not isinstance(layer, SafecastLayer) and self._checkSafecastLayer(layer):
+            from layer.safecast import SafecastLayerHelper
             helper = SafecastLayerHelper(layer)
             helper.computeStats()
             self._layers[layer.id()] = helper
@@ -703,6 +732,7 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         if not layer:
             return False
 
+        from .layer.safecast import SafecastLayer        
         if isinstance(layer, SafecastLayer):
             # map layer loaded by Safecast plugin
             return True

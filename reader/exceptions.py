@@ -7,11 +7,6 @@ Read the file LICENCE.md for details.
 .. sectionauthor:: Martin Landa <martin.landa opengeolabs.cz>
 """
                                         
-class SafecastReaderError(Exception):
-    """Safecast reader error class.
-    """
-    pass
-
 class ReaderError(Exception):
     """Reader error class.
     """

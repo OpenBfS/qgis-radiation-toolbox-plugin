@@ -1,6 +1,6 @@
 """Safecast Reader Library
 
-(C) 2015-2016 by OpenGeoLabs s.r.o.
+(C) 2015-2019 by OpenGeoLabs s.r.o.
 
 Read the file LICENCE.md for details.
 
@@ -13,39 +13,32 @@ import csv
 from dateutil import tz
 from datetime import datetime
 
-from .exceptions import SafecastReaderError
-from .logger import SafecastReaderLogger
+from .exceptions import ReaderError
+from .logger import ReaderLogger
+from . import ReaderBase
 
-class SafecastReader(object):
-    def __init__(self, filename=None):
+class SafecastReader(ReaderBase):
+    """Reader class for reading Safecast format (LOG files).
+    """
+    def __init__(self, filepath):
         """Constructor.
 
         Check format, version and deadtime.
         
-        :param filename: file name to be imported
+        :param filepath: file name to be imported
         """
-        self.filename = filename
         self.format_version = None
         self.deadtime = None
         self.header_line = 0
         self.nlines = 0
 
-        if not self.filename:
-            raise SafecastReaderError("Input file not defined")
-
         try:
-            self._fd = open(self.filename)
+            super(SafecastReader, self).__init__(filepath)
             self.nlines = self._get_count()
             self.header_line = self._read_header()
             self.nlines -= self.header_line
-        except (IOError, SafecastReaderError) as e:
-            raise SafecastReaderError("{}".format(e))
-        
-    def __del__(self):
-        """Destructor, close input file.
-        """
-        if self._fd:
-            self._fd.close()
+        except (IOError, ReaderError) as e:
+            raise ReaderError("{}".format(e))
         
     def __iter__(self):
         """Iterate items in row.
@@ -63,18 +56,18 @@ class SafecastReader(object):
         def _read_header_line(line, header_line):
             line = line.rstrip('\r\n')
             if header_line == 0 and line != "# NEW LOG":
-                raise SafecastReaderError("Unable to read '{}': "
-                                          "Invalid format".format(self.filename))
+                raise ReaderError("Unable to read '{}': "
+                                  "Invalid format".format(self.filename))
             elif header_line == 1 : # -> version
                 if not line.startswith('# format'):
-                    raise SafecastReaderError("Unable to read '{}': "
-                                              "Unknown version".format(self.filename))
+                    raise ReaderError("Unable to read '{}': "
+                                      "Unknown version".format(self.filename))
                 else:
                     self.format_version = line.split('=')[1]
             elif header_line == 2: # -> deadtime
                 if not line.startswith('# deadtime'):
-                    raise SafecastReaderError("Unable to read '{}': "
-                                              "Unknown deadtime".format(self.filename))
+                    raise ReaderError("Unable to read '{}': "
+                                      "Unknown deadtime".format(self.filename))
                 else:
                     self.deadtime = line.split('=')[1]
 
@@ -85,7 +78,7 @@ class SafecastReader(object):
                 _read_header_line(line, header_line)
                 header_line += 1
             if header_line == 3:
-                SafecastReaderLogger.debug("LOG header correct\n")
+                ReaderLogger.debug("LOG header correct\n")
                 break
 
         return header_line
