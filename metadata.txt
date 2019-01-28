@@ -1,38 +1,19 @@
-# This file contains metadata for your plugin. Since 
-# version 2.0 of QGIS this is the proper way to supply 
-# information about a plugin. The old method of 
-# embedding metadata in __init__.py will 
-# is no longer supported since version 2.0.
-
-# This file should be included when you package your plugin.# Mandatory items:
-
 [general]
-name=Radiation Toolbox Plugin (DEV)
+name=Radiation ToolBox Plugin (DEV)
 qgisMinimumVersion=3.0
-description=Plugin for loading data from Safecast radiation monitoring devices
+description=
 version=1.0alpha
 author=OpenGeoLabs s.r.o.
 email=info@opengeolabs.cz
 
-about=This plugin allows to easily load data from Safecast radiation monitoring devices (LOG file) like bGeigie Nano into QGIS as a new vector point layer. Developed by OpenGeoLabs s.r.o for National Radiation Protection Institute (SURO), Prague, Czech Republic (SURO).
+about=
 
-tracker=https://github.com/OpenGeoLabs/qgis-safecast-plugin/issues
-repository=https://github.com/OpenGeoLabs/qgis-safecast-plugin
-# End of mandatory metadata
+tracker=
+repository=
 
-# Recommended items:
+tags=vector,radiation toolbox
 
-# Uncomment the following line and add your changelog:
-# changelog=
-
-# Tags are comma separated with spaces allowed
-tags=vector,safecast
-
-homepage=https://opengeolabs.github.io/qgis-safecast-plugin/
+homepage=
 category=Plugins
-icon=icons/plugin_icon.png
-# experimental flag
+icon=icons/radiation_toolbox_icon.png
 experimental=True
-
-# deprecated flag (applies to the whole plugin, not just a single version)
-deprecated=False

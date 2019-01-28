@@ -12,5 +12,6 @@ def type2name(pt):
     else: # Safecast
         return "Safecast"
 
+# TODO: read type from metadata.txt
 PLUGIN_TYPE = PluginType.Dev
 PLUGIN_NAME = type2name(PLUGIN_TYPE)

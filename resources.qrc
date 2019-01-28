@@ -5,6 +5,8 @@
     <file>icons/tool_delete.png</file>
     <file>icons/tool_import.png</file>
     <file>icons/tool_save.png</file>
-    <file>icons/plugin_icon.png</file>
+    <file>icons/radiation_toolbox_icon.png</file>
+    <file>icons/safecast_icon_devel.png</file>
+    <file>icons/safecast_icon_stable.png</file>
   </qresource>
 </RCC>
