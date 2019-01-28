@@ -11,3 +11,8 @@ class SafecastReaderError(Exception):
     """Safecast reader error class.
     """
     pass
+
+class ReaderError(Exception):
+    """Reader error class.
+    """
+    pass

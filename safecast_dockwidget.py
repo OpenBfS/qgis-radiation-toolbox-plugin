@@ -36,7 +36,9 @@ from qgis.utils import iface, Qgis
 
 from osgeo import ogr
 
-from .reader import SafecastReader, SafecastReaderError, SafecastReaderLogger
+from .reader.safecast import SafecastReader
+from .reader.exceptions import SafecastReaderError
+from .reader.logger import SafecastReaderLogger
 from .safecast_layer import SafecastLayer, SafecastWriterError, SafecastLayerHelper
 from .safecast_stats import SafecastStats
 try:
@@ -289,12 +291,25 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         Shows error dialog on failure.
 
         """
-        # get last used directory path from settings
-        sender = 'safecast-{}-lastUserFilePath'.format(self.sender().objectName())
-        lastPath = self._settings.value(sender, '')
+        # get last used directory/extension path from settings
+        senderPath = 'safecast-{}-lastUserFilePath'.format(self.sender().objectName())
+        lastPath = self._settings.value(senderPath, os.path.expanduser("~"))
+        senderExt = 'safecast-{}-lastUserFileExt'.format(self.sender().objectName())
+        lastExt = self._settings.value(senderExt, "log")
 
-        filePath, __ = QFileDialog.getOpenFileName(self, self.tr("Load Safecast LOG file"),
-                                               lastPath, self.tr("LOG file (*.LOG)"))
+        fileMask = "{u} files (*.{u} *.{l})".format(u=lastExt.upper(), l=lastExt)
+        for ext in ("log", "ers", "pei"):
+            if ext in fileMask:
+                # already defined as default, skip
+                continue
+            fileMask += ";;{u} files (*.{u} *.{l})".format(
+                u=ext.upper(), l=ext
+            )
+        filePath, __ = QFileDialog.getOpenFileName(
+            self, self.tr("Load Safecast LOG file"),
+            lastPath,
+            self.tr(fileMask)
+        )
         if not filePath:
             # action canceled
             return
@@ -303,7 +318,10 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         storageFormat = 'ogr' if self.storageCombo.currentIndex() == 0 else 'memory'
 
         filePath = os.path.normpath(filePath)
-        try:
+        fileExt = os.path.splitext(filePath)[1][1:] # remove '.'
+        helper = None
+
+        if fileExt == 'LOG':
             # create reader for input data
             reader = SafecastReader(filePath)
             # create new QGIS map layer (read-only)
@@ -311,24 +329,33 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
             # register new layer in plugin's internal list
             # helper must be assigned before loading data (!)
             self._layers[layer.id()] = helper = SafecastLayerHelper(layer)
+        elif fileExt == 'ers':
+            from .reader.ers import ERSReader
+            from .layer.ers import ERSLayer
 
+            # create reader for input data
+            reader = ERSReader(filePath)
+            # create new QGIS map layer (read-only)
+            layer = ERSLayer(filePath)
+        elif fileExt == 'pei':
+            iface.messageBar().pushMessage(self.tr("Critical"),
+                                           self.tr("Support for {} files not implemented yet").format(fileExt.upper()),
+                                           level=Qgis.Critical, duration=10)
+            return
+        else:
+            iface.messageBar().pushMessage(self.tr("Critical"),
+                                           self.tr("Unsupported file extension {}").format(fileExt),
+                                           level=Qgis.Critical, duration=10)
+            return
+
+        try:
             # load data by reader into new layer
             layer.load(reader)
-            helper.recalculateAttributes()
-
-            # set style
-            layer.loadNamedStyle(self.stylePath())
-            layer.setAliases() # loadNameStyle removes aliases (why?)
-
-            # add map layer to the canvas (do not add into TOC)
-            QgsProject.instance().addMapLayer(layer, False)
-            # force register layer in TOC as a first item
-            QgsProject.instance().layerTreeRoot().insertLayer(0, layer)
-            # select this layer (this must be done manually since we
-            # are inserting item into layer tree)
-            iface.layerTreeView().setCurrentLayer(layer)
-            # expand layer
-            iface.layerTreeView().currentNode().setExpanded(True)
+            if helper:
+                helper.recalculateAttributes()
+                # set style
+                layer.loadNamedStyle(self.stylePath())
+                layer.setAliases() # loadNameStyle removes aliases (why?)
         except (SafecastError, SafecastReaderError) as e:
             # show error message on failure
             iface.messageBar().clearWidgets()
@@ -338,9 +365,19 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
                                            level=Qgis.Critical, duration=10)
             return
 
+        # add map layer to the canvas (do not add into TOC)
+        QgsProject.instance().addMapLayer(layer, False)
+        # force register layer in TOC as a first item
+        QgsProject.instance().layerTreeRoot().insertLayer(0, layer)
+        # select this layer (this must be done manually since we
+        # are inserting item into layer tree)
+        iface.layerTreeView().setCurrentLayer(layer)
+        # expand layer
+        iface.layerTreeView().currentNode().setExpanded(True)
+
         # enable save, select, style buttons when new layer is
         # successfully loaded
-        if not self.actionSave.isEnabled():
+        if fileExt == 'LOG' and not self.actionSave.isEnabled():
             self.actionSave.setEnabled(True)
             self.actionSelect.setEnabled(True)
             self.styleButton.setEnabled(True)
@@ -348,8 +385,9 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         # zoom to the new layer (already selected)
         iface.zoomToActiveLayer()
 
-        # remember directory path
-        self._settings.setValue(sender, os.path.dirname(filePath))
+        # remember directory path / file extension
+        self._settings.setValue(senderPath, os.path.dirname(filePath))
+        self._settings.setValue(senderExt, fileExt)
 
     def onPlotStyle(self, idx):
         """Plot style changed.

@@ -42,7 +42,7 @@ from qgis.gui import QgsMessageBar
 
 from osgeo import ogr
 
-from .reader import SafecastReaderError
+from .reader.exceptions import SafecastReaderError
 
 def check_version(min_version=(2,18)):
     version = list(map(int, Qgis.QGIS_VERSION.split('.')[:2]))
