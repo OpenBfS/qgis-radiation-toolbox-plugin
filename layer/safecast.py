@@ -30,7 +30,7 @@ from PyQt5.QtCore import QVariant
 from PyQt5.QtWidgets import QProgressBar
 
 from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
-    QgsGeometry, QgsPointXY, QgsVectorFileWriter, QgsFields, \
+    QgsGeometry, QgsPointXY, QgsFields, \
     QgsCoordinateReferenceSystem, QgsMessageLog, QgsDistanceArea
 from qgis.utils import iface, Qgis
 

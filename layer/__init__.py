@@ -5,7 +5,9 @@ import time
 from PyQt5 import QtWidgets
 
 from qgis.utils import iface, Qgis
-from qgis.core import QgsVectorLayer
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter
+
+from osgeo import ogr
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from plugin_type import PLUGIN_NAME
@@ -133,21 +135,22 @@ class LayerBase(QgsVectorLayer):
         self._provider = self.dataProvider()
 
         # create metadata layer
-        ds = ogr.Open(filePath, True)
-        layer_name = 'safecast_metadata'
-        layer = ds.GetLayerByName(layer_name)
-        if layer is None:
-            layer = ds.CreateLayer(layer_name, None, ogr.wkbNone)
-        layer_defn = layer.GetLayerDefn()
-        for key in list(self.metadata.keys()):
-            field = ogr.FieldDefn(key, ogr.OFTString)
-            layer.CreateField(field)
+        if self.metadata:
+            ds = ogr.Open(filePath, True)
+            layer_name = '{}_metadata'.format(self.__class__.__name__.lower())
+            layer = ds.GetLayerByName(layer_name)
+            if layer is None:
+                layer = ds.CreateLayer(layer_name, None, ogr.wkbNone)
+            layer_defn = layer.GetLayerDefn()
+            for key in list(self.metadata.keys()):
+                field = ogr.FieldDefn(key, ogr.OFTString)
+                layer.CreateField(field)
 
-        feat = ogr.Feature(layer_defn)
-        for key, value in list(self.metadata.items()):
-            feat.SetField(key, value)
-        layer.CreateFeature(feat)
-        feat = None
+            feat = ogr.Feature(layer_defn)
+            for key, value in list(self.metadata.items()):
+                feat.SetField(key, value)
+            layer.CreateFeature(feat)
+            feat = None
 
     def _addError(self, etype):
         """Add error message.
