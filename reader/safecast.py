@@ -29,26 +29,26 @@ class SafecastReader(ReaderBase):
         """
         self.format_version = None
         self.deadtime = None
-        self.header_line = 0
         self.nlines = 0
 
         try:
             super(SafecastReader, self).__init__(filepath)
-            self.nlines = self._get_count()
-            self.header_line = self._read_header()
-            self.nlines -= self.header_line
+            self.nlines = self._count('\n')
+            self.nlines -= self._read_header()
         except (IOError, ReaderError) as e:
             raise ReaderError("{}".format(e))
         
-    def __iter__(self):
-        """Iterate items in row.
-
-        Skip commented lines (#).
-
-        :return: list of processed items
+    def _next_data_item(self):
+        """Read next data item.
         """
-        return csv.reader([row for row in self._fd if row[0]!='#'])
-    
+        while True:
+            line = self._fd.readline().rstrip(os.linesep)
+            if not line:
+                # EOF
+                return None
+            if not line.startswith('#'):
+                return csv.reader([line])
+
     def _read_header(self):
         """Read LOG header and store metadata items.
         """
@@ -72,7 +72,7 @@ class SafecastReader(ReaderBase):
                     self.deadtime = line.split('=')[1]
 
         header_line = 0
-        self._fd.seek(0, 0)
+        self._reset()
         for line in self._fd:
             if line.startswith('#'):
                 _read_header_line(line, header_line)
@@ -83,23 +83,7 @@ class SafecastReader(ReaderBase):
 
         return header_line
 
-    def _get_count(self):
-        """Get number of lines.
-
-        Inspired by http://stackoverflow.com/questions/845058/how-to-get-line-count-cheaply-in-python.
-        """
-        self._fd.seek(0, 0)
-        lines = 0
-        buf_size = 1024 * 1024
-        read_f = self._fd.read # loop optimization
-
-        buf = read_f(buf_size)
-        while buf:
-            lines += buf.count('\n')
-            buf = read_f(buf_size)
-
-        return lines
-
     def count(self):
-        """Return number of lines."""
+        """Get data item count.
+        """
         return self.nlines

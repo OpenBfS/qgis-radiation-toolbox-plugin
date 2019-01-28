@@ -354,7 +354,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             # create reader for input data
             reader = ERSReader(filePath)
             # create new QGIS map layer (read-only)
-            layer = ERSLayer(filePath)
+            layer = ERSLayer(filePath, storageFormat)
         elif fileExt == 'pei':
             iface.messageBar().pushMessage(self.tr("Critical"),
                                            self.tr("Support for {} files not implemented yet").format(fileExt.upper()),

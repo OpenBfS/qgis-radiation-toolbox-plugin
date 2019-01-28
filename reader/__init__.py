@@ -1,3 +1,5 @@
+from .exceptions import ReaderError
+
 class ReaderBase:
     """Base reader class.
     """
@@ -25,11 +27,6 @@ class ReaderBase:
         """
         raise NotImplementedError()
 
-    def _item2feat(self, item):
-        """Create QgsFeature from data item.
-        """
-        raise NotImplementedError()
-
     def __iter__(self):
         """Loop through features.
         """
@@ -43,9 +40,30 @@ class ReaderBase:
         if not item:
             raise StopIteration
 
-        return self._item2feat(item)
+        return item
 
     def _reset(self):
         """Reset reading.
         """
         self._fd.seek(0, 0)
+
+    def _count(self, counter):
+        """Count data items.
+
+        Inspired by http://stackoverflow.com/questions/845058/how-to-get-line-count-cheaply-in-python.
+
+        :param counter: counter string
+        """
+        self._reset()
+
+        lines = 0
+        buf_size = 1024 * 1024
+        read_f = self._fd.read # loop optimization
+
+        buf = read_f(buf_size)
+        while buf:
+            lines += buf.count(counter)
+            buf = read_f(buf_size)
+
+        return lines
+        

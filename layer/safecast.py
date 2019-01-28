@@ -18,11 +18,6 @@
  *                                                                         *
  ***************************************************************************/
 """
-from builtins import hex
-from builtins import map
-from builtins import range
-from builtins import object
-
 import os
 import sys
 import time
@@ -31,8 +26,8 @@ from dateutil import tz
 
 import sqlite3
 
-from qgis.PyQt.QtCore import QVariant
-from qgis.PyQt.QtWidgets import QProgressBar
+from PyQt5.QtCore import QVariant
+from PyQt5.QtWidgets import QProgressBar
 
 from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
     QgsGeometry, QgsPointXY, QgsVectorFileWriter, QgsFields, \
@@ -40,6 +35,8 @@ from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
 from qgis.utils import iface, Qgis
 
 from osgeo import ogr
+
+from . import LayerBase
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from reader.exceptions import ReaderError
@@ -49,23 +46,16 @@ class SafecastWriterError(Exception):
     """
     pass
 
-class SafecastLayer(QgsVectorLayer):
+class SafecastLayer(LayerBase):
     def __init__(self, fileName, storageFormat):
         """Safecast memory-based read-only layer.
 
         :param fileName: path to input file
         :param storageFormat: storage format for layer (Memory or SQLite)
         """
-        self.fileName = fileName
-        self._layerName = os.path.splitext(os.path.basename(self.fileName))[0]
-
-        self.storageFormat = storageFormat
+        super(SafecastLayer, self).__init__(filepath, storageFormat)
         
-        # import errors
-        self._errs = {}
-
         # define attributes
-
         # setting up precision causes in QGIS 2 problems when exporing
         # data into other formats, see
         # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
@@ -107,11 +97,6 @@ class SafecastLayer(QgsVectorLayer):
         # two last columns split (hdop + checksum)
         self._validNumAttrbs = len(attrbs) - (self.skipNumAttrbs + 1)
 
-        # create point layer (WGS-84, EPSG:4326)
-        super(SafecastLayer, self).__init__('Point?crs=epsg:4326', self._layerName, "memory")
-
-        self._provider = self.dataProvider()
-
         # set attributes
         self._provider.addAttributes(attrbs)
         self.updateFields()
@@ -119,10 +104,6 @@ class SafecastLayer(QgsVectorLayer):
         # metadata
         self.setAttribution('Safecast plugin')
         self.setAttributionUrl('https://opengeolabs.github.io/qgis-safecast-plugin')
-
-        # layer is empty, no data loaded
-        self._loaded = False
-        self.metadata = None
 
     def setAliases(self):
         """Set aliases
@@ -164,8 +145,7 @@ class SafecastLayer(QgsVectorLayer):
 
         :param reader: reader class used for reading input data
         """
-        if self._loaded:
-            return # data already loaded
+        super(SafecastLayer, self).load(reader)
 
         # store metadata
         self.metadata = {
@@ -173,133 +153,11 @@ class SafecastLayer(QgsVectorLayer):
             'deadtime': reader.deadtime
         }
 
-        # create progress bar widget
-        progressMessageBar = iface.messageBar().createMessage(self.tr("Loading data..."))
-        progress = QProgressBar()
-        progress.setMaximum(100)
-        progressMessageBar.layout().addWidget(progress)
-        iface.messageBar().pushWidget(progressMessageBar, Qgis.Info)
 
-        # load items as new point features (inform user about progress)
-        i = 0
-        count = reader.count()
-        start = time.clock()
-        prev = None # previous feature
-
-        self.startEditing()
-        for f in reader:
-            i += 1
-
-            if len(f) < 1:
-                # skip empty lines
-                continue
-
-            feat = self._processRow(f, i, prev) # process feature
-            if feat:
-                prev = feat # remember feature for a next run
-                feat.setId(i)
-                self.addFeature(feat)
-
-            if i % 100 == 0:
-                percent = i / float(count) * 100
-                progress.setValue(percent)
-
-        # add features (attributes recalculated)
-        self.commitChanges()
-
-        if self._errs:
-            # report errors if any
-            iface.messageBar().pushMessage(
-                self.tr("Warning"),
-                self.tr("{} invalid measurement(s) skipped (see message log for details)").format(
-                    sum(self._errs.values())
-                ),
-                level=Qgis.Warning,
-                duration=5
-            )
-
-            for attr in list(self._errs.keys()):
-                QgsMessageLog.logMessage(
-                    "{}: {} measurement(s) skipped (invalid {})".format(
-                        self.fileName, self._errs[attr], attr
-                    ),
-                    tag='Safecast'
-                )
-
-        if self.storageFormat == "ogr":
-            # write data into SQLite DB
-            self._writeToSQLite()
-            self.reload()
-
-        # finish import
-        endtime = time.clock() - start
-        progress.setValue(100)
-        iface.messageBar().clearWidgets()
-
-        # inform user about successful import
-        iface.messageBar().pushMessage(
-            self.tr("Success"),
-            self.tr("{} features loaded (in {:.2f} sec).").format(self.featureCount(), endtime),
-            level=Qgis.Success,
-            duration=3
-        )
-
-        # data loaded (avoid multiple imports)
-        self._loaded = True
-
-        # switch to read-only mode
-        self.setReadOnly(True)
-
-    def _writeToSQLite(self):
-        filePath = os.path.splitext(self.fileName)[0] + '.sqlite'
-        writer, msg = QgsVectorFileWriter.writeAsVectorFormat(
-            self,
-            filePath,
-            self._provider.encoding(),
-            self._provider.crs(),
-            driverName="SQLite"
-        )
-        if writer != QgsVectorFileWriter.NoError:
-            raise ReaderError(
-                self.tr("Unable to create SQLite datasource: {}").format(msg)
-            )
-
-        # set datasource to SQLite DB
-        self.setDataSource(filePath, self._layerName, self.storageFormat)
-        self._provider = self.dataProvider()
-
-        # create metadata layer
-        ds = ogr.Open(filePath, True)
-        layer_name = 'safecast_metadata'
-        layer = ds.GetLayerByName(layer_name)
-        if layer is None:
-            layer = ds.CreateLayer(layer_name, None, ogr.wkbNone)
-        layer_defn = layer.GetLayerDefn()
-        for key in list(self.metadata.keys()):
-            field = ogr.FieldDefn(key, ogr.OFTString)
-            layer.CreateField(field)
-
-        feat = ogr.Feature(layer_defn)
-        for key, value in list(self.metadata.items()):
-            feat.SetField(key, value)
-        layer.CreateFeature(feat)
-        feat = None
-
-    def _addError(self, etype):
-        """Add error message.
-
-        :param etype: error type (HDOP, SAT, ...)
-        """
-        if etype not in self._errs:
-            self._errs[etype] = 0
-        self._errs[etype] += 1
-
-    def _processRow(self, row, rowid, prev):
+    def _item2feat(self, item):
         """Process line in LOG file and create a new point feature based on this line.
 
-        :param row: row to be processed
-        :param rowid: force feature id
-        :param prev: previous feature for cumulative values
+        :param item: item to be processed
         """
         # define internal functions first
         def coords_float(coord, ne):
@@ -316,33 +174,33 @@ class SafecastLayer(QgsVectorLayer):
                 val *= -1
             return val
 
-        if len(row) != self._validNumAttrbs:
+        if len(item) != self._validNumAttrbs:
             raise ReaderError(
-                self.tr("Failed to read input data. Line: {}").format(','.join(row))
+                self.tr("Failed to read input data. Line: {}").format(','.join(item))
             )
 
         # force to split last item (hdop & checksum)
-        row[-1], newitem = row[-1].split('*', 1)
-        row.append('*' + newitem)
+        item[-1], newitem = item[-1].split('*', 1)
+        item.append('*' + newitem)
 
         # set coordinates
-        y = coords_float(row[7], row[8])
-        x = coords_float(row[9], row[10])
+        y = coords_float(item[7], item[8])
+        x = coords_float(item[9], item[10])
         point = QgsPointXY(x, y)
 
         # check validity
         # drop data according
-        # - HDOP (row[-2])
-        if int(row[-2]) == 9999:
+        # - HDOP (item[-2])
+        if int(item[-2]) == 9999:
             self._addError('HDOP = 9999')
             return None
-        # - SAT (row[-3])
-        if int(row[-3]) < 3:
+        # - SAT (item[-3])
+        if int(item[-3]) < 3:
             self._addError('SAT < 3')
             return None
         ### Date validity will be performed when whole file loaded
-        # - year (row[2])
-        # myear = datetime2year(row[2])
+        # - year (item[2])
+        # myear = datetime2year(item[2])
         # minyear = 2011
         # maxyear = datetime.now().year
         # if myear < minyear or myear > maxyear:
@@ -354,9 +212,9 @@ class SafecastLayer(QgsVectorLayer):
         # check timestamp (hours only, dates are fixed when
         # recalculating attributes) validity
         try:
-            datetime.strptime(row[2].split('T', 1)[1], "%H:%M:%SZ")
+            datetime.strptime(item[2].split('T', 1)[1], "%H:%M:%SZ")
         except ValueError as e:
-            self._addError('invalid timestamp {}'.format(row[2]))
+            self._addError('invalid timestamp {}'.format(item[2]))
             return None
 
         # - null island
@@ -367,11 +225,11 @@ class SafecastLayer(QgsVectorLayer):
 
         # compute ader_microSvh
         try:
-            pulse5s = int(row[4])
+            pulse5s = int(item[4])
             if pulse5s > 0:
                 ader = pulse5s * 12
             else:
-                ader = int(row[3]) # cpm
+                ader = int(item[3]) # cpm
             ader *= 0.0029940119760479
         except ValueError:
             ader = -1
@@ -380,28 +238,28 @@ class SafecastLayer(QgsVectorLayer):
         # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
         # disabled
         # see https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/14/decrease-the-number-of-decimal-places-in
-        # row.insert(0, float('{0:.4f}'.format(ader)))
-        row.insert(0, ader)
+        # item.insert(0, float('{0:.4f}'.format(ader)))
+        item.insert(0, ader)
 
         # local time will be calculated after loading whole file
-        row.insert(1, None)
+        item.insert(1, None)
 
         # speed will be calculated after loading whole file
-        row.insert(2, None)
+        item.insert(2, None)
 
         # dose increment + time/dose cumulative will be calculated after loading whole file
-        row.insert(3, None)
-        row.insert(4, None)
-        row.insert(5, None)
+        item.insert(3, None)
+        item.insert(4, None)
+        item.insert(5, None)
 
         # create new feature
-        fet = QgsFeature()
-        fet.setGeometry(QgsGeometry.fromPointXY(point))
+        feat = QgsFeature()
+        feat.setGeometry(QgsGeometry.fromPointXY(point))
 
         # set attributes
-        fet.setAttributes(row)
+        feat.setAttributes(item)
 
-        return fet
+        return feat
 
 class SafecastLayerHelper(object):
     def __init__(self, layer):
@@ -447,16 +305,16 @@ class SafecastLayerHelper(object):
             os.path.basename(self._fileName)
         )[0]
 
-    def _gpsChecksum(self, row):
-        """Compute checksum of row.
+    def _gpsChecksum(self, item):
+        """Compute checksum of item.
 
-        :param row: row line
+        :param item: item line
 
         :return: checksum
         """
-        chk = ord(row[0])
+        chk = ord(item[0])
 
-        for ichk in row[1:]:
+        for ichk in item[1:]:
             chk ^= ord(ichk)
 
         return hex(chk)[2:].upper()
@@ -502,14 +360,14 @@ class SafecastLayerHelper(object):
                 features = self._layer.getFeatures()
                 for feat in features:
                     attrs = feat.attributes()
-                    row = ''
+                    item = ''
                     for val in attrs[self._skipNumAttrbs:-2]: # skip calculated points
-                        row += '{},'.format(val)
-                    row += '{}'.format(attrs[-2])
+                        item += '{},'.format(val)
+                    item += '{}'.format(attrs[-2])
                     # join two last columns(hdop+checksum)
-                    checksum = self._gpsChecksum(row[1:]) # skip '$'
-                    row += '*{}\n'.format(checksum)
-                    f.write(row)
+                    checksum = self._gpsChecksum(item[1:]) # skip '$'
+                    item += '*{}\n'.format(checksum)
+                    f.write(item)
         except IOError as e:
             raise SafecastWriterError(e)
 

@@ -9,9 +9,6 @@ from qgis.core import QgsFeature, QgsPointXY, QgsGeometry
 class ERSReader(ReaderBase):
     """ERS reader class.
     """
-    def __init__(self, filepath):
-        super(ERSReader, self).__init__(filepath)
-
     def _next_data_item(self):
         """Read next data item.
         """
@@ -46,18 +43,5 @@ class ERSReader(ReaderBase):
 
     def count(self):
         """Count data items.
-
-        Inspired by http://stackoverflow.com/questions/845058/how-to-get-line-count-cheaply-in-python.
         """
-        self._reset()
-
-        lines = 0
-        buf_size = 1024 * 1024
-        read_f = self._fd.read # loop optimization
-
-        buf = read_f(buf_size)
-        while buf:
-            lines += buf.count('PA ')
-            buf = read_f(buf_size)
-
-        return lines
+        return self._count('PA ')
