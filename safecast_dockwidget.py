@@ -489,12 +489,12 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
 
             if reply == QMessageBox.Yes:
                 # delete selected features from currently selected layer
-                iface.messageBar().pushMessage(
-                    self.tr("Info"),
-                    self.tr("Updating attributes..."),
-                    level=Qgis.Info,
-                    duration=1
-                )
+                # iface.messageBar().pushMessage(
+                #     self.tr("Info"),
+                #     self.tr("Updating attributes..."),
+                #     level=Qgis.Info,
+                #     duration=1
+                # )
                 layer.setReadOnly(False)
                 iface.actionToggleEditing().trigger()
                 iface.actionDeleteSelected().trigger()
@@ -630,13 +630,13 @@ class SafecastDockWidget(QDockWidget, FORM_CLASS):
         """
         layer = iface.activeLayer()
         enabled = True if layer and self._checkSafecastLayer(layer) else False
-        if enabled:
-            iface.messageBar().pushMessage(
-                self.tr("Info"),
-                self.tr("Updating statistics for {}...".format(layer.name())),
-                level=Qgis.Info,
-                duration=3
-            )
+        # if enabled:
+        #     iface.messageBar().pushMessage(
+        #         self.tr("Info"),
+        #         self.tr("Updating statistics for {}...".format(layer.name())),
+        #         level=Qgis.Info,
+        #         duration=3
+        #     )
 
         self.actionSave.setEnabled(enabled)
         self.actionSelect.setEnabled(enabled)
