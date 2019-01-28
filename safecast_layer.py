@@ -38,7 +38,6 @@ from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
     QgsGeometry, QgsPointXY, QgsVectorFileWriter, QgsFields, \
     QgsCoordinateReferenceSystem, QgsMessageLog, QgsDistanceArea
 from qgis.utils import iface, Qgis
-from qgis.gui import QgsMessageBar
 
 from osgeo import ogr
 
@@ -221,7 +220,7 @@ class SafecastLayer(QgsVectorLayer):
                 self.tr("{} invalid measurement(s) skipped (see message log for details)").format(
                     sum(self._errs.values())
                 ),
-                level=QgsMessageBar.WARNING,
+                level=Qgis.Warning,
                 duration=5
             )
 
@@ -704,7 +703,7 @@ class SafecastLayerHelper(object):
             iface.messageBar().pushMessage(
                 self._layer.tr("Warning"),
                 self._layer.tr("No valid date found. Unable to fix datetime."),
-                level=QgsMessageBar.WARNING,
+                level=Qgis.Warning,
                 duration=5
             )
 

@@ -31,7 +31,6 @@ from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox, QToolBar, QGridLayout,
 from qgis.PyQt.QtCore import pyqtSignal, QSettings, QSignalMapper
 
 from qgis.core import QgsProject, QgsRasterLayer
-from qgis.gui import QgsMessageBar
 from qgis.utils import iface, Qgis
 
 from osgeo import ogr
