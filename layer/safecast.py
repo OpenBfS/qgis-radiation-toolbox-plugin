@@ -53,7 +53,7 @@ class SafecastLayer(LayerBase):
         :param fileName: path to input file
         :param storageFormat: storage format for layer (Memory or SQLite)
         """
-        super(SafecastLayer, self).__init__(filepath, storageFormat)
+        super(SafecastLayer, self).__init__(fileName, storageFormat)
         
         # define attributes
         # setting up precision causes in QGIS 2 problems when exporing
@@ -267,7 +267,7 @@ class SafecastLayerHelper(object):
         if isinstance(layer, SafecastLayer):
             self._storageFormat = layer.storageFormat
             self._skipNumAttrbs = 7 if self._storageFormat == 'ogr' else 6
-            self._fileName = layer.fileName
+            self._fileName = layer._fileName
         else:
             # assuming SQLite (ogr)
             self._storageFormat = "ogr"

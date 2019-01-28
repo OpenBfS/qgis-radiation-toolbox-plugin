@@ -47,7 +47,7 @@ class SafecastReader(ReaderBase):
                 # EOF
                 return None
             if not line.startswith('#'):
-                return csv.reader([line])
+                return list(csv.reader([line]))[0]
 
     def _read_header(self):
         """Read LOG header and store metadata items.

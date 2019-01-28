@@ -5,7 +5,7 @@ import time
 from PyQt5 import QtWidgets
 
 from qgis.utils import iface, Qgis
-from qgis.core import QgsVectorLayer, QgsVectorFileWriter
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog
 
 from osgeo import ogr
 
@@ -63,6 +63,9 @@ class LayerBase(QgsVectorLayer):
             i += 1
 
             feat = self._item2feat(item)
+            if not feat:
+                # error appeared
+                continue
             feat.setId(i)
             self.addFeature(feat)
 
