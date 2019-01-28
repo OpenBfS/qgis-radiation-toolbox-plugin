@@ -40,6 +40,7 @@ from . import LayerBase
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from reader.exceptions import ReaderError
+from plugin_type import PLUGIN_NAME
 
 class SafecastWriterError(Exception):
     """Safecast writer error class.
@@ -690,9 +691,11 @@ class SafecastLayerHelper(object):
             # force reload attributes
             self._layer.dataProvider().forceReload()
 
-            QgsMessageLog.logMessage('{}: {} features updated in {} sec'.format(
-                self._layer.name(), self._layer.featureCount(), time.clock() - start),
-                                     tag='Safecast'
+            QgsMessageLog.logMessage(
+                '{0}: {1} features updated in {2:.2f} sec'.format(
+                    self._layer.name(), self._layer.featureCount(), time.clock() - start),
+                tag=PLUGIN_NAME,
+                level=Qgis.Info
             )
 
     def computeStats(self):
