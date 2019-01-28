@@ -321,7 +321,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 u=ext.upper(), l=ext
             )
         filePath, __ = QtWidgets.QFileDialog.getOpenFileName(
-            self, self.tr("Load {} file").format(lastExt.upper()),
+            self, self.tr("Load radiation data file").format(lastExt.upper()),
             lastPath,
             self.tr(fileMask)
         )

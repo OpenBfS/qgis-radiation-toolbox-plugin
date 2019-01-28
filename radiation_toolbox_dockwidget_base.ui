@@ -374,7 +374,7 @@ QGroupBox::title {
     <string>Import</string>
    </property>
    <property name="toolTip">
-    <string>Import file as new layer</string>
+    <string>Import radiation data</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+I</string>
