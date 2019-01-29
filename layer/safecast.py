@@ -57,35 +57,9 @@ class SafecastLayer(LayerBase):
         super(SafecastLayer, self).__init__(fileName, storageFormat)
         
         # define attributes
-        # setting up precision causes in QGIS 2 problems when exporing
-        # data into other formats, see
-        # https://lists.osgeo.org/pipermail/qgis-developer/2017-December/050969.html
-        attrbs = [
-            # QgsField("ader_microsvh", QVariant.Double, prec=4),
-            QgsField("ader_microsvh", QVariant.Double),
-            QgsField("time_local", QVariant.String),
-            # QgsField("speed_kmph", QVariant.Double, prec=2),
-            QgsField("speed_kmph", QVariant.Double),
-            QgsField("dose_increment", QVariant.Double),
-            QgsField("time_cumulative", QVariant.String),
-            QgsField("dose_cumulative", QVariant.Double),
-            QgsField("device", QVariant.String),
-            QgsField("device_id",  QVariant.Int),
-            QgsField("date_time", QVariant.String),
-            QgsField("cpm", QVariant.Int),
-            QgsField("pulses5s", QVariant.Int),
-            QgsField("pulses_total", QVariant.Int),
-            QgsField("validity", QVariant.String),
-            QgsField("lat_deg", QVariant.String),
-            QgsField("hemisphere", QVariant.String),
-            QgsField("long_deg", QVariant.String),
-            QgsField("east_west", QVariant.String),
-            QgsField("altitude", QVariant.Double),
-            QgsField("gps_validity", QVariant.String),
-            QgsField("sat", QVariant.Int),
-            QgsField("hdop", QVariant.Int),
-            QgsField("checksum", QVariant.String)
-        ]
+        attrbs, self._aliases = self._readAttrsDefs()
+        if self._aliases and self.storageFormat == "ogr":
+            self._aliases.insert(0, "FID")
         # skip computed attributes
         # - FID (SQLite only)
         # - ader_microsvh
@@ -105,39 +79,6 @@ class SafecastLayer(LayerBase):
         # metadata
         self.setAttribution('Safecast plugin')
         self.setAttributionUrl('https://opengeolabs.github.io/qgis-safecast-plugin')
-
-    def setAliases(self):
-        """Set aliases
-        """
-        aliases = [
-            self.tr("ADER (microSv/h)"),
-            self.tr("Local time"),
-            self.tr("Speed (km/h)"),
-            self.tr("Increment DOSE"),
-            self.tr("Cumulative time"),
-            self.tr("Cumulative DOSE"),
-            self.tr("Device"),
-            self.tr("Device ID"),
-            self.tr("Datetime"),
-            self.tr("CPM"),
-            self.tr("Pulses 5sec"),
-            self.tr("Pulses total"),
-            self.tr("Validity"),
-            self.tr("Latitude (deg)"),
-            self.tr("Hemisphere"),
-            self.tr("Longitude (deg)"),
-            self.tr("East/West"),
-            self.tr("Altitude"),
-            self.tr("GPS Validity"),
-            self.tr("Sat"),
-            self.tr("HDOP"),
-            self.tr("CheckSum")
-        ]
-        if self.storageFormat == "ogr":
-            aliases.insert(0, self.tr("FID"))
-
-        for i in range(0, len(aliases)):
-            self.setFieldAlias(i, aliases[i])
 
     def load(self, reader):
         """Load LOG file using specified reader.

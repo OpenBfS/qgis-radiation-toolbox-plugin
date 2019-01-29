@@ -1,11 +1,14 @@
 import os
 import sys
 import time
+import inspect
+import csv
 
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QVariant
 
 from qgis.utils import iface, Qgis
-from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog, QgsField
 
 from osgeo import ogr
 
@@ -169,3 +172,33 @@ class LayerBase(QgsVectorLayer):
         """
         raise NotImplementedError()
 
+    def _readAttrsDefs(self):
+        """Read attributes definition from CSV file if available.
+
+        :returns: list of QgsField items
+        :returns: list of aliases
+        """
+        csv_file = os.path.join(
+            os.path.dirname(__file__),
+            os.path.splitext(inspect.getfile(self.__class__))[0] + '.csv')
+
+        attrbs = []
+        if not os.path.exists(csv_file):
+            return attrbs, attrbs
+
+        aliases = []
+        with open(csv_file) as fd:
+            reader = csv.reader(fd)
+            for row in reader:
+                attrbs.append(QgsField(
+                    row[0], eval("QVariant.{}".format(row[1]))
+                ))
+                aliases.append(row[2])
+
+        return attrbs, aliases
+
+    def setAliases(self):
+        """Set aliases
+        """
+        for i in range(0, len(self._aliases)):
+            self.setFieldAlias(i, self._aliases[i])
