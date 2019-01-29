@@ -3,6 +3,7 @@ import sys
 import time
 import inspect
 import csv
+import copy
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QVariant
@@ -11,6 +12,8 @@ from qgis.utils import iface, Qgis
 from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog, QgsField
 
 from osgeo import ogr
+
+from .exceptions import LoadError
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from plugin_type import PLUGIN_NAME
@@ -29,6 +32,7 @@ class LayerBase(QgsVectorLayer):
         # create point layer (WGS-84, EPSG:4326)
         super(LayerBase, self).__init__('Point?crs=epsg:4326', self._layerName, "memory")
 
+        self._aliases = [] # list of attribute aliases
         self._provider = self.dataProvider()
 
         # import errors
@@ -65,6 +69,9 @@ class LayerBase(QgsVectorLayer):
         for item in reader:
             i += 1
 
+            if i == 1 and not self._aliases:
+                # set attributes from data item if needed
+                self._aliases = self._setAttrbsDefs(item.keys())
             feat = self._item2feat(item)
             if not feat:
                 # error appeared
@@ -132,7 +139,7 @@ class LayerBase(QgsVectorLayer):
             driverName="SQLite"
         )
         if writer != QgsVectorFileWriter.NoError:
-            raise ReaderError(
+            raise LoadError(
                 self.tr("Unable to create SQLite datasource: {}").format(msg)
             )
 
@@ -172,30 +179,70 @@ class LayerBase(QgsVectorLayer):
         """
         raise NotImplementedError()
 
-    def _readAttrsDefs(self):
-        """Read attributes definition from CSV file if available.
+    def _setAttrbsDefs(self, limit=[]):
+        """Set attributes definition from CSV file if available.
 
-        :returns: list of QgsField items
+        :param limit: limit to list of attributes
+
         :returns: list of aliases
         """
+        def addAttribute(row, attrbs, aliases):
+            attrbs.append(QgsField(
+                row['attribute'], eval("QVariant.{}".format(row['qtype']))
+            ))
+            aliases.append(row['alias'])
+
         csv_file = os.path.join(
             os.path.dirname(__file__),
             os.path.splitext(inspect.getfile(self.__class__))[0] + '.csv')
 
-        attrbs = []
         if not os.path.exists(csv_file):
-            return attrbs, attrbs
+            return []
 
+        attrbs = []
         aliases = []
         with open(csv_file) as fd:
-            reader = csv.reader(fd)
-            for row in reader:
-                attrbs.append(QgsField(
-                    row[0], eval("QVariant.{}".format(row[1]))
-                ))
-                aliases.append(row[2])
+            csv_attrbs = list(csv.DictReader(fd, delimiter=';'))
+            if limit:
+                # limit attributes based on input file (first feature) - ERS format specific
+                for name in limit:
+                    # first try full name match
+                    found = False
+                    for row in csv_attrbs:
+                        if row['attribute'] == name:
+                            addAttribute(row, attrbs, aliases)
+                            found = True
+                            break
+                    if found:
+                        continue
+                    for row in csv_attrbs:
+                        # full name match is not required see
+                        # https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin/issues/41#note_136183930
+                        if row['attribute'] == name[:len(row['attribute'])] or name == row['attribute'][:len(name)]:
+                            row_modified = copy.copy(row)
+                            row_modified['attribute'] = name # force (full) attribute name from input file
+                            addAttribute(row_modified, attrbs, aliases)
+                            break
+            else:
+                # add all attributes
+                for row in csv_attrbs:
+                    addAttribute(row, attrbs, aliases)
 
-        return attrbs, aliases
+        if limit:
+            if len(attrbs) != len(limit):
+                raise LoadError(
+                    "Number of attributes differs {} vs {}".format(
+                        len(attrbs), len(limit)
+                ))
+
+        if aliases and self.storageFormat == "ogr":
+            aliases.insert(0, "FID")
+
+        # set attributes
+        self._provider.addAttributes(attrbs)
+        self.updateFields()
+
+        return aliases
 
     def setAliases(self):
         """Set aliases

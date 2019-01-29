@@ -35,7 +35,7 @@ from qgis.utils import iface, Qgis
 from osgeo import ogr
 
 from .plugin_type import PLUGIN_TYPE, PLUGIN_NAME, PluginType
-from .reader.exceptions import ReaderError
+from .layer.exceptions import LoadError
 from .reader.logger import ReaderLogger
 from .safecast_stats import SafecastStats
 try:
@@ -373,8 +373,8 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 helper.recalculateAttributes()
                 # set style
                 layer.loadNamedStyle(self.stylePath())
-                layer.setAliases() # loadNameStyle removes aliases (why?)
-        except (RadiationToolboxError, ReaderError) as e:
+            layer.setAliases() # loadNameStyle removes aliases (why?)
+        except (RadiationToolboxError, LoadError) as e:
             # show error message on failure
             iface.messageBar().clearWidgets()
             iface.messageBar().pushMessage(self.tr("Critical"),

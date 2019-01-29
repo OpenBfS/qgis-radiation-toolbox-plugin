@@ -39,7 +39,6 @@ from osgeo import ogr
 from . import LayerBase
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from reader.exceptions import ReaderError
 from plugin_type import PLUGIN_NAME
 
 class SafecastWriterError(Exception):
@@ -55,11 +54,9 @@ class SafecastLayer(LayerBase):
         :param storageFormat: storage format for layer (Memory or SQLite)
         """
         super(SafecastLayer, self).__init__(fileName, storageFormat)
-        
+
         # define attributes
-        attrbs, self._aliases = self._readAttrsDefs()
-        if self._aliases and self.storageFormat == "ogr":
-            self._aliases.insert(0, "FID")
+        self._aliases = self._setAttrbsDefs()
         # skip computed attributes
         # - FID (SQLite only)
         # - ader_microsvh
@@ -70,11 +67,7 @@ class SafecastLayer(LayerBase):
         # - dose_cumulative
         self.skipNumAttrbs = 6
         # two last columns split (hdop + checksum)
-        self._validNumAttrbs = len(attrbs) - (self.skipNumAttrbs + 1)
-
-        # set attributes
-        self._provider.addAttributes(attrbs)
-        self.updateFields()
+        self._validNumAttrbs = len(self.attributeList()) - (self.skipNumAttrbs + 1)
 
         # metadata
         self.setAttribution('Safecast plugin')
@@ -83,7 +76,7 @@ class SafecastLayer(LayerBase):
     def load(self, reader):
         """Load LOG file using specified reader.
 
-        ReaderError is raised on failure.
+        LoadError is raised on failure.
 
         :param reader: reader class used for reading input data
         """
@@ -117,7 +110,7 @@ class SafecastLayer(LayerBase):
             return val
 
         if len(item) != self._validNumAttrbs:
-            raise ReaderError(
+            raise LoadError(
                 self.tr("Failed to read input data. Line: {}").format(','.join(item))
             )
 
@@ -280,7 +273,7 @@ class SafecastLayerHelper(object):
                     metadata[name] = value
             ds = None
         except:
-            raise ReaderError(
+            raise LoadError(
                 self.tr("Unable to retrive Safecast metadata for selected layer")
             )
 

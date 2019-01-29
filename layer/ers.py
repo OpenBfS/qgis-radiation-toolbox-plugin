@@ -15,7 +15,7 @@ class ERSLayer(LayerBase):
         feat.setGeometry(QgsGeometry.fromPointXY(point))
 
         # set attributes
-        ### feat.setAttributes(list(item.values()))
+        # print ('y', len(list(item.values())))
+        feat.setAttributes(list(item.values()))
 
         return feat
-    
