@@ -282,7 +282,10 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         :return: path given as a string
         """
-        stylePath = self._styles[self.styleBox.currentIndex()]['file']
+        try:
+            stylePath = self._styles[self.styleBox.currentIndex()]['file']
+        except IndexError:
+            return None
         if not os.path.isfile(stylePath):
             raise RadiationToolboxError(
                 self.tr("Style '{}' not found").format(stylePath
@@ -373,8 +376,8 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             layer.load(reader)
             if helper:
                 helper.recalculateAttributes()
-                # set style
-                layer.loadNamedStyle(self.stylePath())
+            # set style
+            layer.loadNamedStyle(self.stylePath())
             layer.setAliases() # loadNameStyle removes aliases (why?)
         except (RadiationToolboxError, LoadError) as e:
             # show error message on failure
