@@ -31,7 +31,7 @@ PRB;Direction (bearing) of the measurement or sample point relative to the North
 #C_winname;Counts in window or ROI winname;Numeric;Raw data;0;;Int
 #R_winname;Count rate in window or ROI winname;1/s;Raw data;0;;Int
 #S;Full Raw spectrum. Values separated by spaces. The number of channels is given by ISC.;Numeric;Raw data;1;;String
-#SC;Checksum of the spectral data Equals the total counts in the spectrum;Numeric;Raw data;1;;Int
+#SC;Checksum of the spectral data Equals the total counts in the spectrum;Numeric;Raw data;1;TC_SPC;Int
 SGP;Point source in ground at depth;m;Source geometry in ground, general description. Description of the source geometry in ground without specification of source coordinates. Can be combined with the Q-identifier to specify geographical coordinates. The identifier can take on a radionuclide tail. Specifies source geometry assumptions used for data processing;0;;Double
 SGL;Line source in ground at depth;m;Source geometry in ground, general description. Description of the source geometry in ground without specification of source coordinates. Can be combined with the Q-identifier to specify geographical coordinates. The identifier can take on a radionuclide tail. Specifies source geometry assumptions used for data processing;0;;Double
 SGA;Plane source in ground at depth;m;Source geometry in ground, general description. Description of the source geometry in ground without specification of source coordinates. Can be combined with the Q-identifier to specify geographical coordinates. The identifier can take on a radionuclide tail. Specifies source geometry assumptions used for data processing;0;;Double
