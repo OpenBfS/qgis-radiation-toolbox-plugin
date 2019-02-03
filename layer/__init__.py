@@ -190,7 +190,7 @@ class LayerBase(QgsVectorLayer):
             attrbs.append(QgsField(
                 row['attribute'], eval("QVariant.{}".format(row['qtype']))
             ))
-            aliases.append(row['alias'])
+            aliases.append(row['alias'].replace('_', ' '))
 
         csv_file = os.path.join(
             os.path.dirname(__file__),
