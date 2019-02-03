@@ -395,14 +395,6 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # expand layer
         iface.layerTreeView().currentNode().setExpanded(True)
 
-        # enable save, select, style buttons when new layer is
-        # successfully loaded
-        print ('X', fileExt == 'log', not self.actionSave.isEnabled())
-        if fileExt == 'log' and not self.actionSave.isEnabled():
-            self.actionSave.setEnabled(True)
-            self.actionSelect.setEnabled(True)
-            self.styleButton.setEnabled(True)
-
         # zoom to the new layer (already selected)
         iface.zoomToActiveLayer()
 
