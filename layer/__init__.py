@@ -221,6 +221,7 @@ class LayerBase(QgsVectorLayer):
                         if row['attribute'] == name[:len(row['attribute'])] or name == row['attribute'][:len(name)]:
                             row_modified = copy.copy(row)
                             row_modified['attribute'] = name # force (full) attribute name from input file
+                            row_modified['alias'] = '{} ({})'.format(name, row_modified['alias'])
                             addAttribute(row_modified, attrbs, aliases)
                             break
             else:
