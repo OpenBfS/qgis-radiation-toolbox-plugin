@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 /***************************************************************************
-                             A QGIS Safecast Plugin
-                             ----------------------
+                             A QGIS Radiation Toolbox / Safecast Plugin
+                             ------------------------------------------
         begin                : 2016-05-25
         git sha              : $Format:%H$
-        copyright            : (C) 2016-2018 by OpenGeoLabs s.r.o.
+        copyright            : (C) 2016-2019 by OpenGeoLabs s.r.o.
         acknowledgement      : Suro, Czech Republic
         email                : martin.landa@opengeolabs.cz
  ***************************************************************************/
