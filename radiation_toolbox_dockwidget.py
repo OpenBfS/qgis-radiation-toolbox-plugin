@@ -153,11 +153,12 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
     def _initStyles(self):
         """Define internal styles and polulates items in combobox."""
-        self._styles = [
-            {'name' : '0.08 - 10.00 microSv/h', 'file' : 'normal'},
-            {'name' : '0.05 - 200.00 microSv/h', 'file' : 'high'}
-        ]
-
+        if PLUGIN_TYPE == PluginType.Safecast:
+            from styles.safecast import SafecastStyles
+            self._styles = SafecastStyles()
+        else:
+            from styles import Styles
+            self._styles = Styles()
         for item in self._styles:
             self.styleBox.addItem(item['name'])
         self.styleBox.setCurrentIndex(0)
@@ -281,10 +282,11 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         :return: path given as a string
         """
-        styleName = self._styles[self.styleBox.currentIndex()]['file']
-        stylePath = os.path.join(os.path.dirname(__file__), "styles", styleName + '.qml')
+        stylePath = self._styles[self.styleBox.currentIndex()]['file']
         if not os.path.isfile(stylePath):
-            raise RadiationToolboxError(self.tr("Style '{}' not found").format(styleName))
+            raise RadiationToolboxError(
+                self.tr("Style '{}' not found").format(stylePath
+        ))
 
         return stylePath
     
@@ -395,6 +397,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # enable save, select, style buttons when new layer is
         # successfully loaded
+        print ('X', fileExt == 'log', not self.actionSave.isEnabled())
         if fileExt == 'log' and not self.actionSave.isEnabled():
             self.actionSave.setEnabled(True)
             self.actionSelect.setEnabled(True)
@@ -707,6 +710,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.actionSelect.setEnabled(enabled)
         self.actionDeselect.setEnabled(enabled)
         self.actionDelete.setEnabled(enabled)
+        self.styleButton.setEnabled(enabled)
 
         self.actionUpdateStatsPlot.trigger()
 
