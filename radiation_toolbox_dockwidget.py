@@ -87,8 +87,12 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         iface.currentLayerChanged.connect(self.onUpdatePlugin)
         self.actionUpdateStatsPlot.triggered.connect(self.onUpdateStatsPlot)
 
-        # load internal styles
-        self._initStyles()
+        # settings (must be called before _initStyles()
+        self._settings = QSettings("OpenGeoLabs", PLUGIN_NAME)
+        # load styles options
+        ### self._initStyles()
+        # load settings
+        self._loadSettings()
 
         # initialize internal variables
         self._initStats()
@@ -99,10 +103,6 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # not returned by getActiveLayer()
         self._layers = {}
 
-        # settings
-        self._settings = QSettings("OpenGeoLabs", PLUGIN_NAME)
-        self._loadSettings()
-
         # collect supported file extensions
         if PLUGIN_TYPE == PluginType.Dev:
             self._supported_ext = ("log", "ers", "pei")
@@ -110,7 +110,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self._supported_ext = ("ers", "pei")
         else:
             self._supported_ext = ("log")
-        
+
     def _createToolbarAndConnect(self):
         """Create toolbar and connect tools."""
         self.signalMapper = QSignalMapper(self)
@@ -151,14 +151,34 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         sender = '{}-lastCurrentIndex'.format(self.plotStyleCombo.objectName())
         self.plotStyleCombo.setCurrentIndex(int(self._settings.value(sender, 0)))
 
-    def _initStyles(self):
-        """Define internal styles and polulates items in combobox."""
-        if PLUGIN_TYPE == PluginType.Safecast:
+    def _lastUsedFileExt(self, getSender=False):
+        """Get last used file extension"""
+        senderExt = '{}-lastUserFileExt'.format(self.sender().objectName())
+        lastExt = self._settings.value(
+            senderExt, "log" if PLUGIN_TYPE != PluginType.RT else "ers"
+        ).lower()
+
+        if getSender:
+            return senderExt, lastExt
+
+        return lastExt
+
+    def _initStyles(self, fileExt):
+        """Define internal styles and polulates items in combobox.
+
+        :param fileExt: file extension to determine which style to load
+        """
+        if fileExt == 'log': # Safecast
             from styles.safecast import SafecastStyles
             self._styles = SafecastStyles()
+        elif fileExt == 'ers':
+            from styles.ers import ERSStyles
+            self._styles = ERSStyles()
         else:
             from styles import Styles
             self._styles = Styles()
+
+        self.styleBox.clear()
         for item in self._styles:
             self.styleBox.addItem(item['name'])
         self.styleBox.setCurrentIndex(0)
@@ -314,8 +334,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # get last used directory/extension path from settings
         senderPath = '{}-lastUserFilePath'.format(self.sender().objectName())
         lastPath = self._settings.value(senderPath, os.path.expanduser("~"))
-        senderExt = '{}-lastUserFileExt'.format(self.sender().objectName())
-        lastExt = self._settings.value(senderExt, "log" if PLUGIN_TYPE != PluginType.RT else "ers").lower()
+        senderExt, lastExt = self._lastUsedFileExt(getSender=True)
 
         fileMask = "{u} files (*.{u} *.{l})".format(u=lastExt.upper(), l=lastExt)
         for ext in self._supported_ext:
@@ -377,6 +396,8 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             if helper:
                 helper.recalculateAttributes()
             # set style
+            # must be called after each loading since file extension can change
+            self._initStyles(fileExt)
             layer.loadNamedStyle(self.stylePath())
             layer.setAliases() # loadNameStyle removes aliases (why?)
         except (RadiationToolboxError, LoadError) as e:
@@ -442,13 +463,15 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 QtWidgets.QMessageBox.Abort
             )
 
+        node = QgsProject.instance().layerTreeRoot().findLayer(layer.id())
+        iface.layerTreeView().layerTreeModel().refreshLayerLegend(node)
+
         # If caching is enabled, a simple canvas refresh might not be sufficient
         # to trigger a redraw and you must clear the cached image for the layer
         if iface.mapCanvas().isCachingEnabled():
-            layer.setCacheImage(None)
+            layer.triggerRepaint()
         else:
             iface.mapCanvas().refresh()
-        iface.legendInterface().refreshLayerSymbology(layer)
 
     def onSave(self):
         """Save currently selected map layer as new LOG file.
