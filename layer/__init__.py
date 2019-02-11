@@ -4,6 +4,7 @@ import time
 import inspect
 import csv
 import copy
+from enum import Enum
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QVariant
@@ -17,6 +18,11 @@ from .exceptions import LoadError
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from plugin_type import PLUGIN_NAME
+
+class LayerType(Enum):
+    Safecast = 0
+    ERS = 1
+    PEI = 2
 
 class LayerBase(QgsVectorLayer):
     """QGIS layer base class (read-only memory based).
@@ -41,6 +47,9 @@ class LayerBase(QgsVectorLayer):
         # layer is empty, no data loaded
         self._loaded = False
         self.metadata = None
+
+        # layer type not defined
+        self.layerType = None
 
     def load(self, reader):
         """Load input data by specified reader.

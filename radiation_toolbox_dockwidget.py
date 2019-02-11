@@ -38,6 +38,7 @@ from .plugin_type import PLUGIN_TYPE, PLUGIN_NAME, PluginType
 from .layer.exceptions import LoadError
 from .reader.logger import ReaderLogger
 from .safecast_stats import SafecastStats
+from .layer import LayerType
 try:
     from .safecast_plot import SafecastPlot
     plotMsg = None
@@ -65,7 +66,6 @@ class RadiationToolboxError(Exception):
     pass
 
 class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
-
     closingPlugin = pyqtSignal()
 
     def __init__(self, parent=None):
@@ -84,7 +84,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.actionUpdateStatsPlot = QtWidgets.QAction("UpdateStatsPlot", self)
 
         # generic connects
-        iface.currentLayerChanged.connect(self.onUpdatePlugin)
+        iface.currentLayerChanged.connect(self.onLayerChanged)
         self.actionUpdateStatsPlot.triggered.connect(self.onUpdateStatsPlot)
 
         # settings (must be called before _initStyles()
@@ -163,15 +163,16 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         return lastExt
 
-    def _initStyles(self, fileExt):
+    def _initStyles(self, layer):
         """Define internal styles and polulates items in combobox.
 
-        :param fileExt: file extension to determine which style to load
+        :param layer: layer used for initialization
         """
-        if fileExt == 'log': # Safecast
+        layerType = self._getLayerType(layer)
+        if layerType == LayerType.Safecast:
             from styles.safecast import SafecastStyles
             self._styles = SafecastStyles()
-        elif fileExt == 'ers':
+        elif layerType == LayerType.ERS:
             from styles.ers import ERSStyles
             self._styles = ERSStyles()
         else:
@@ -397,7 +398,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 helper.recalculateAttributes()
             # set style
             # must be called after each loading since file extension can change
-            self._initStyles(fileExt)
+            self._initStyles(layer)
             layer.loadNamedStyle(self.stylePath())
             layer.setAliases() # loadNameStyle removes aliases (why?)
         except (RadiationToolboxError, LoadError) as e:
@@ -660,7 +661,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         :param layer: current layer
         """
         # attach stats widget if doesn't exist
-        is_safecast_layer = self._checkSafecastLayer(layer)
+        is_safecast_layer = self._getLayerType(layer) == LayerType.Safecast
         self._initStats(is_safecast_layer)
         if not is_safecast_layer:
             return
@@ -696,7 +697,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         :param layer: current layer
         """
         # attach plot widget if doesn't exist
-        self._initPlot(self._checkSafecastLayer(layer) and not plotMsg)
+        self._initPlot(self._getLayerType(layer) == LayerType.Safecast and not plotMsg)
 
         helper = self._getLayerHelper(layer)
         if not helper:
@@ -711,11 +712,15 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             groupTitle = self.tr("Plot")
         self.groupPlot.setTitle(groupTitle)
 
-    def onUpdatePlugin(self):
+    def onLayerChanged(self):
         """Update plugin widgets.
         """
         layer = iface.activeLayer()
-        enabled = True if layer and self._checkSafecastLayer(layer) else False
+
+        # re-initialize styles
+        self._initStyles(layer)
+
+        enabled = True if layer and self._getLayerType(layer) == LayerType.Safecast else False
         # if enabled:
         #     iface.messageBar().pushMessage(
         #         self.tr("Info"),
@@ -723,7 +728,6 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         #         level=Qgis.Info,
         #         duration=3
         #     )
-
         self.actionSave.setEnabled(enabled)
         self.actionSelect.setEnabled(enabled)
         self.actionDeselect.setEnabled(enabled)
@@ -739,7 +743,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # layer loaded from project
         from .layer.safecast import SafecastLayer
-        if not isinstance(layer, SafecastLayer) and self._checkSafecastLayer(layer):
+        if not isinstance(layer, SafecastLayer) and self._getLayerType(layer) == LayerType.Safecast:
             from layer.safecast import SafecastLayerHelper
             helper = SafecastLayerHelper(layer)
             helper.computeStats()
@@ -748,24 +752,27 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.updateStats(layer)
         self.updatePlot(layer)
 
-    def _checkSafecastLayer(self, layer):
-        """Check if current map layer is managable by Safecast plugin.
+    def _getLayerType(self, layer):
+        """Check if current map layer is managable by plugin.
+
+        :return: layer type or None (unknown)
         """
         if not layer:
-            return False
+            return None
 
-        from .layer.safecast import SafecastLayer        
-        if isinstance(layer, SafecastLayer):
-            # map layer loaded by Safecast plugin
-            return True
+        # first check whether layer has been loaded by the plugin
+        if hasattr(layer, "layerType"):
+            return layer.layerType
 
+        # then check layer metadata
         try:
             filePath = layer.dataProvider().dataSourceUri().split('|')[0]
             ds = ogr.Open(filePath)
-            layer = ds.GetLayerByName('safecast_metadata')
-            is_safecast_layer = True if layer else False
+            layer = ds.GetLayerByName('safecast_metadata') is not None
             ds = None
+            if layer:
+                return LayerType.Safecast
         except:
-            is_safecast_layer = None
+            return None
 
-        return is_safecast_layer
+        return None

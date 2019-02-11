@@ -36,7 +36,7 @@ from qgis.utils import iface, Qgis
 
 from osgeo import ogr
 
-from . import LayerBase
+from . import LayerBase, LayerType
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from plugin_type import PLUGIN_NAME
@@ -72,6 +72,9 @@ class SafecastLayer(LayerBase):
         # metadata
         self.setAttribution('Safecast plugin')
         self.setAttributionUrl('https://opengeolabs.github.io/qgis-safecast-plugin')
+
+        # layer type
+        self.layerType = LayerType.Safecast
 
     def load(self, reader):
         """Load LOG file using specified reader.
