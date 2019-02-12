@@ -251,7 +251,6 @@ class LayerBase(QgsVectorLayer):
             aliases.insert(0, "FID")
 
         # set attributes
-        print (attrbs)
         self._provider.addAttributes(attrbs)
         self.updateFields()
 
