@@ -83,14 +83,16 @@ class SafecastLayer(LayerBase):
 
         :param reader: reader class used for reading input data
         """
-        super(SafecastLayer, self).load(reader)
-
         # store metadata
         self.metadata = {
-            'format': reader.format_version,
-            'deadtime': reader.deadtime
+            'table': 'safecast_metadata',
+            'columns': {
+                'format': reader.format_version,
+                'deadtime': reader.deadtime
+            }
         }
 
+        super(SafecastLayer, self).load(reader)
 
     def _item2feat(self, item):
         """Process line in LOG file and create a new point feature based on this line.

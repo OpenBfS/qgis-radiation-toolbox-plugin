@@ -157,22 +157,23 @@ class LayerBase(QgsVectorLayer):
         self._provider = self.dataProvider()
 
         # create metadata layer
-        if self.metadata:
+        if self.metadata and 'table' in self.metadata:
             ds = ogr.Open(filePath, True)
-            layer_name = '{}_metadata'.format(self.__class__.__name__.lower())
+            layer_name = self.metadata['table']
             layer = ds.GetLayerByName(layer_name)
             if layer is None:
                 layer = ds.CreateLayer(layer_name, None, ogr.wkbNone)
             layer_defn = layer.GetLayerDefn()
-            for key in list(self.metadata.keys()):
-                field = ogr.FieldDefn(key, ogr.OFTString)
-                layer.CreateField(field)
+            if 'columns' in self.metadata:
+                for key in self.metadata['columns']:
+                    field = ogr.FieldDefn(key, ogr.OFTString)
+                    layer.CreateField(field)
 
-            feat = ogr.Feature(layer_defn)
-            for key, value in list(self.metadata.items()):
-                feat.SetField(key, value)
-            layer.CreateFeature(feat)
-            feat = None
+                feat = ogr.Feature(layer_defn)
+                for key, value in list(self.metadata['columns'].items()):
+                    feat.SetField(key, value)
+                layer.CreateFeature(feat)
+                feat = None
 
     def _addError(self, etype):
         """Add error message.
