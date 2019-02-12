@@ -21,7 +21,14 @@ class ERSReader(ReaderBase):
                 item = OrderedDict()
                 for it in line.split(';'):
                     k, v = it.split(' ', 1)
-                    item[k] = v
+                    if k == '#S':
+                        # see https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin/issues/41#note_137813150
+                        idx = 1
+                        for s_v in v.strip().split(' '):
+                            item['{}{}'.format(k, idx)] = s_v
+                            idx += 1
+                    else:
+                        item[k] = v
 
                 return item
 

@@ -231,7 +231,8 @@ class LayerBase(QgsVectorLayer):
                         if row['attribute'] == name[:len(row['attribute'])] or name == row['attribute'][:len(name)]:
                             row_modified = copy.copy(row)
                             row_modified['attribute'] = name # force (full) attribute name from input file
-                            row_modified['alias'] = '{} ({})'.format(name, row_modified['alias'])
+                            if row_modified['alias']:
+                                row_modified['alias'] = '{} ({})'.format(name, row_modified['alias'])
                             addAttribute(row_modified, attrbs, aliases)
                             break
             else:
@@ -250,6 +251,7 @@ class LayerBase(QgsVectorLayer):
             aliases.insert(0, "FID")
 
         # set attributes
+        print (attrbs)
         self._provider.addAttributes(attrbs)
         self.updateFields()
 
