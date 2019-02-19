@@ -381,10 +381,13 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             # create new QGIS map layer (read-only)
             layer = ERSLayer(filePath, storageFormat)
         elif fileExt == 'pei':
-            iface.messageBar().pushMessage(self.tr("Critical"),
-                                           self.tr("Support for {} files not implemented yet").format(fileExt.upper()),
-                                           level=Qgis.Critical, duration=10)
-            return
+            from .reader.pei import PEIReader
+            from .layer.pei import PEILayer
+
+            # create reader for input data
+            reader = PEIReader(filePath)
+            # create new QGIS map layer (read-only)
+            layer = PEILayer(filePath, storageFormat)
         else:
             iface.messageBar().pushMessage(self.tr("Critical"),
                                            self.tr("Unsupported file extension {}").format(fileExt),

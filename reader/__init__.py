@@ -3,11 +3,12 @@ from .exceptions import ReaderError
 class ReaderBase:
     """Base reader class.
     """
-    def __init__(self, filepath):
+    def __init__(self, filepath, rb=False):
         self._filepath = filepath
 
         try:
-            self._fd = open(self._filepath)
+            flag = 'rb' if rb else 'r'
+            self._fd = open(self._filepath, flag)
         except IOError as e:
             raise ReaderError("{}".format(e))
 
@@ -66,4 +67,3 @@ class ReaderBase:
             buf = read_f(buf_size)
 
         return lines
-        
