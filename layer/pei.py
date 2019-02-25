@@ -20,7 +20,7 @@ class PEILayer(LayerBase):
         feat = QgsFeature()
 
         # set geometry
-        point = QgsPointXY(float(item['Lat']), float(item['Lon']))
+        point = QgsPointXY(float(item['Lon']), float(item['Lat']))
         feat.setGeometry(QgsGeometry.fromPointXY(point))
 
         # set attributes
