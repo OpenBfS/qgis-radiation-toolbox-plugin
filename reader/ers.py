@@ -4,8 +4,6 @@ from collections import OrderedDict
 from . import ReaderBase
 from .exceptions import ReaderError
 
-from qgis.core import QgsFeature, QgsPointXY, QgsGeometry
-
 class ERSReader(ReaderBase):
     """ERS reader class.
     """
@@ -31,22 +29,6 @@ class ERSReader(ReaderBase):
                         item[k] = v
 
                 return item
-
-    def _item2feat(self, item):
-        """Create QgsFeature from data item.
-        """
-        feat = QgsFeature()
-
-        # set geometry
-        # PN ... Measurement or sample point coordinate N-S (latitude) Numeric
-        # PE ... Measurement or sample point coordinate E-W (longitude) Numeric
-        point = QgsPointXY(float(item['PE']), float(item['PN']))
-        feat.setGeometry(QgsGeometry.fromPointXY(point))
-
-        # set attributes
-        ### feat.setAttributes(list(item.values()))
-
-        return feat
 
     def count(self):
         """Count data items.
