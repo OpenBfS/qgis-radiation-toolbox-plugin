@@ -98,9 +98,8 @@ class LayerBase(QgsVectorLayer):
         # add features (attributes recalculated if requested)
         self.commitChanges()
 
-        if self.storageFormat == "ogr":
-            # write data into SQLite DB
-            self._writeToSQLite()
+        if self.storageFormat != "memory":
+            self._writeToOgrDataSource()
             self.reload()
 
         # finish import
@@ -141,22 +140,23 @@ class LayerBase(QgsVectorLayer):
         # switch to read-only mode
         self.setReadOnly(True)
 
-    def _writeToSQLite(self):
-        filePath = os.path.splitext(self._fileName)[0] + '.sqlite'
+    def _writeToOgrDataSource(self):
+        fileExt = self.storageFormat.lower()
+        filePath = os.path.splitext(self._fileName)[0] + '.{}'.format(fileExt)
         writer, msg = QgsVectorFileWriter.writeAsVectorFormat(
             self,
             filePath,
             self._provider.encoding(),
             self._provider.crs(),
-            driverName="SQLite"
+            driverName=self.storageFormat
         )
         if writer != QgsVectorFileWriter.NoError:
             raise LoadError(
                 self.tr("Unable to create SQLite datasource: {}").format(msg)
             )
 
-        # set datasource to SQLite DB
-        self.setDataSource(filePath, self._layerName, self.storageFormat)
+        # set datasource to new OGR datasource
+        self.setDataSource(filePath, self._layerName, 'ogr')
         self._provider = self.dataProvider()
 
         # create metadata layer
@@ -262,7 +262,7 @@ class LayerBase(QgsVectorLayer):
                         len(attrbs), len(limit)
                 ))
 
-        if aliases and self.storageFormat == "ogr":
+        if aliases and self.storageFormat != "memory":
             aliases.insert(0, "FID")
 
         # set attributes

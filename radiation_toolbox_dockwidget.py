@@ -355,7 +355,13 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             return
 
         # storage format
-        storageFormat = 'ogr' if self.storageCombo.currentIndex() == 0 else 'memory'
+        storage_idx = self.storageCombo.currentIndex()
+        if storage_idx == 0:
+            storageFormat = 'SQLite'
+        elif storage_idx == 1:
+            storageFormat = 'GPKG'
+        else:
+            storageFormat = 'memory'
 
         filePath = os.path.normpath(filePath)
         fileExt = os.path.splitext(filePath)[1][1:].lower() # remove '.'

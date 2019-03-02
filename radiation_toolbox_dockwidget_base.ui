@@ -350,6 +350,11 @@ QGroupBox::title {
              </item>
              <item>
               <property name="text">
+               <string>GeoPackage</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
                <string>Memory</string>
               </property>
              </item>
