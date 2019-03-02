@@ -551,7 +551,10 @@ class SafecastLayerHelper(object):
                 # disabled
                 # see https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/14/decrease-the-number-of-decimal-places-in
                 # speed = float('{0:.2f}'.format((dist / 1e3) / timediff)) # kmph
-                speed = (dist / 1e3) / timediff # kmph
+                if timediff > 0:
+                    speed = (dist / 1e3) / timediff # kmph
+                else:
+                    speed = 0
                 speed_cum += speed
 
                 # time cumulative
