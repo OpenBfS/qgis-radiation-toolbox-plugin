@@ -80,7 +80,10 @@ class LayerBase(QgsVectorLayer):
 
             if i == 1 and not self._aliases:
                 # set attributes from data item if needed
-                self._aliases = self._setAttrbsDefs(item.keys())
+                self._aliases = self._setAttrbsDefs(
+                    limit=item.keys(),
+                    defs=reader.attributeDefs()
+                )
             feat = self._item2feat(item)
             if not feat:
                 # error appeared
@@ -189,7 +192,7 @@ class LayerBase(QgsVectorLayer):
         """
         raise NotImplementedError()
 
-    def _setAttrbsDefs(self, limit=[]):
+    def _setAttrbsDefs(self, limit=[], defs=None):
         """Set attributes definition from CSV file if available.
 
         :param limit: limit to list of attributes
@@ -202,17 +205,10 @@ class LayerBase(QgsVectorLayer):
             ))
             aliases.append(row['alias'].replace('_', ' '))
 
-        csv_file = os.path.join(
-            os.path.dirname(__file__),
-            os.path.splitext(inspect.getfile(self.__class__))[0] + '.csv')
+        def processAttributes(csv_attrbs, limit):
+            attrbs = []
+            aliases = []
 
-        if not os.path.exists(csv_file):
-            return []
-
-        attrbs = []
-        aliases = []
-        with open(csv_file) as fd:
-            csv_attrbs = list(csv.DictReader(fd, delimiter=';'))
             if limit:
                 # limit attributes based on input file (first feature) - ERS format specific
                 for name in limit:
@@ -239,6 +235,25 @@ class LayerBase(QgsVectorLayer):
                 # add all attributes
                 for row in csv_attrbs:
                     addAttribute(row, attrbs, aliases)
+
+            return attrbs, aliases
+
+        if not defs:
+            # predefined attributes (CSV file)
+            # Safecast, ERS
+            csv_file = os.path.join(
+                os.path.dirname(__file__),
+                os.path.splitext(inspect.getfile(self.__class__))[0] + '.csv')
+            if not os.path.exists(csv_file):
+                return []
+
+            with open(csv_file) as fd:
+                csv_attrbs = list(csv.DictReader(fd, delimiter=';'))
+                attrbs, aliases = processAttributes(csv_attrbs, limit)
+        else:
+            # data-related attributes
+            # PEI
+            attrbs, aliases = processAttributes(defs, limit)
 
         if limit:
             if len(attrbs) != len(limit):

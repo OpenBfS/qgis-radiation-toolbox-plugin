@@ -33,6 +33,17 @@ class PEIReader(ReaderBase):
             'si': 'h',
             'wd': 'h'
         }
+        # http://pyqt.sourceforge.net/Docs/PyQt4/qvariant.html
+        self._dataqtype_conv = {
+            'as': 'String',
+            'by': 'Int',
+            'db': 'Double',
+            'fl': 'Double',
+            'in': 'Int',
+            'li': 'LongLong',
+            'si': 'Int',
+            'wd': 'Int'
+        }
 
     def _header(self):
         """Read header part
@@ -99,3 +110,20 @@ class PEIReader(ReaderBase):
         """Reset reading.
         """
         pass # disable for __iter__
+
+    def attributeDefs(self):
+        """Get attribute definitions from file.
+        """
+        defs = []
+        for name, rdefs in self._recordDef.items():
+            qtype = self._dataqtype_conv[rdefs['type']]
+            if rdefs['multiplier']:
+                qtype = 'Double'
+            defs.append(
+                { 'attribute': name,
+                  'qtype':  qtype,
+                  'alias': rdefs['alias']
+                }
+            )
+
+        return defs

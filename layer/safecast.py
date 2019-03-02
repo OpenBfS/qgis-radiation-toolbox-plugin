@@ -26,7 +26,6 @@ from dateutil import tz
 
 import sqlite3
 
-from PyQt5.QtCore import QVariant
 from PyQt5.QtWidgets import QProgressBar
 
 from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \

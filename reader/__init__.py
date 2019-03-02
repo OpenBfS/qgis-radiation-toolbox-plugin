@@ -67,3 +67,8 @@ class ReaderBase:
             buf = read_f(buf_size)
 
         return lines
+
+    def attributeDefs(self):
+        """Get attribute definitions from file.
+        """
+        return None

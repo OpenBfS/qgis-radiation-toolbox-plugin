@@ -24,6 +24,6 @@ class PEILayer(LayerBase):
         feat.setGeometry(QgsGeometry.fromPointXY(point))
 
         # set attributes
-        # feat.setAttributes(list(item.values()))
+        feat.setAttributes(list(item.values()))
 
         return feat
