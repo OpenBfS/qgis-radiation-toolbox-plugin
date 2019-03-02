@@ -24,8 +24,6 @@ import time
 from datetime import datetime, timedelta, date
 from dateutil import tz
 
-import sqlite3
-
 from PyQt5.QtWidgets import QProgressBar
 
 from qgis.core import QgsVectorLayer, QgsField, QgsFeature, \
@@ -458,7 +456,10 @@ class SafecastLayerHelper(object):
         ### switch from QGIS API to SQLite3 API, see
         ### https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/27/updating-attributes-takes-several-minutes
         conn = connCur = None
-        if self._storageFormat == "ogr":
+        useSqlite3 = True
+        if useSqlite3 and self._storageFormat == "ogr":
+            import sqlite3
+
             idx = 1 # skip FID column for SQLite storage
             conn = sqlite3.connect(self._layer.dataProvider().dataSourceUri().split('|')[0])
             connCur = conn.cursor()
