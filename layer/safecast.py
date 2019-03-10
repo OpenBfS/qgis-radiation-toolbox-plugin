@@ -292,8 +292,8 @@ class SafecastLayerHelper(object):
             with open(filePath, 'w') as f:
                 f.write('# NEW LOG\n')
                 metadata = self._getMetadata()
-                f.write('# format={}\n'.format(metadata['format']))
-                f.write('# deadtime={}\n'.format(metadata['deadtime']))
+                f.write('# format={}\n'.format(metadata['columns']['format']))
+                f.write('# deadtime={}\n'.format(metadata['columns']['deadtime']))
                 features = self._layer.getFeatures()
                 for feat in features:
                     attrs = feat.attributes()
