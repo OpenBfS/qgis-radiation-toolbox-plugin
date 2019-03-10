@@ -64,13 +64,31 @@ class PEIReader(ReaderBase):
                 item = line.rstrip(b'\r\n').split(b',')
                 recordDef[item[0].decode('utf-8')] = {
                     'length' : int(item[1]),
-                    'type': item[2].decode('utf-8'),
+                    'type': item[2].decode('utf-8').rstrip('*'),
+                    'is_spectrum': item[2].decode('utf-8').endswith('*'),
                     'multiplier': float(item[3]) if item[3] not in (b'0', b'1') else None,
                     'unit': item[5].decode('utf-8') if item[5] != b'0' else None,
                     'alias': item[6].decode('utf-8')
                 }
 
         self._recordDef = recordDef
+
+    def _readValue(self, dtype, nbytes, multiplier):
+        """Read value of given types using specified number of bytes.
+
+        :param str dtype: data type
+        :param int nbytes: number of bytes
+        :param float mupliplier: multiplier or None
+        """
+        value = struct.unpack(
+            dtype, self._fd.read(nbytes)
+        )[0]
+        if not dtype.endswith('s') and multiplier:
+            value *= multiplier
+        if dtype == 's':
+            value = value.decode('utf-8').strip(' ')
+
+        return value
 
     def _next_data_item(self):
         """Read next data item.
@@ -85,16 +103,20 @@ class PEIReader(ReaderBase):
         item = OrderedDict()
         for name, rdef in self._recordDef.items():
             dtype = self._datatype_conv[rdef['type']]
-            nbytes = rdef['length'] * self._datatype_bytes[rdef['type']]
+            nbytes = self._datatype_bytes[rdef['type']]
+            if not rdef['is_spectrum']:
+                nbytes *= rdef['length']
             if dtype == 's':
                 dtype = '{}s'.format(nbytes)
-            value = struct.unpack(
-                dtype, self._fd.read(nbytes)
-            )[0]
-            if rdef['multiplier']:
-                value *= rdef['multiplier']
-            if self._datatype_conv[rdef['type']] == 's':
-                value = value.decode('utf-8').strip(' ')
+
+            if rdef['is_spectrum']:
+                for i in range(rdef['length']):
+                    # TODO: how to process ?
+                    self._readValue(dtype, nbytes, rdef['multiplier'])
+                value = None
+            else:
+                value = self._readValue(dtype, nbytes, rdef['multiplier'])
+
             item[name] = value
 
         return item

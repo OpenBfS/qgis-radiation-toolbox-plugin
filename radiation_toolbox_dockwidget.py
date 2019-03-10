@@ -337,13 +337,17 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         lastPath = self._settings.value(senderPath, os.path.expanduser("~"))
         senderExt, lastExt = self._lastUsedFileExt(getSender=True)
 
-        fileMask = "{u} files (*.{u} *.{l})".format(u=lastExt.upper(), l=lastExt)
+        fileMask = "{u} files (*.{u} *.{l}".format(u=lastExt.upper(), l=lastExt)
+        if lastExt == 'pei':
+            fileMask += ' *.P46'
+        fileMask += ')'
         for ext in self._supported_ext:
             if ext in fileMask:
                 # already defined as default, skip
                 continue
-            fileMask += ";;{u} files (*.{u} *.{l})".format(
-                u=ext.upper(), l=ext
+            extra = ' *.P46' if ext == 'pei' else ''
+            fileMask += ";;{u} files (*.{u} *.{l} {extra})".format(
+                u=ext.upper(), l=ext, extra=extra
             )
         filePath, __ = QtWidgets.QFileDialog.getOpenFileName(
             self, self.tr("Load radiation data file").format(lastExt.upper()),
@@ -386,7 +390,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             reader = ERSReader(filePath)
             # create new QGIS map layer (read-only)
             layer = ERSLayer(filePath, storageFormat)
-        elif fileExt == 'pei':
+        elif fileExt in ('pei', 'p46'):
             from .reader.pei import PEIReader
             from .layer.pei import PEILayer
 
@@ -394,6 +398,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             reader = PEIReader(filePath)
             # create new QGIS map layer (read-only)
             layer = PEILayer(filePath, storageFormat)
+            fileExt = 'pei' # do not store p46 in settings
         else:
             iface.messageBar().pushMessage(self.tr("Critical"),
                                            self.tr("Unsupported file extension {}").format(fileExt),
