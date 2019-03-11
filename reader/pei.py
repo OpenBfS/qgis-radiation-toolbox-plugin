@@ -13,6 +13,10 @@ class PEIReader(ReaderBase):
         # https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin/issues/37#note_149160559
         # must be defined before calling self._header()
         self._attrbsIgnore = [ 'ISP1U' ]
+        for i in range(1, 11):
+            self._attrbsIgnore.append(
+                "{0}{1:02d}".format('ISPG', i)
+            )
 
         self._header()
         self._fd.read(3) # data starts after 3 bytes
