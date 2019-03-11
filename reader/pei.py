@@ -53,7 +53,7 @@ class PEIReader(ReaderBase):
     def _header(self):
         """Read header part
         """
-        inRecordDef = False
+        inRecordDef = begin = False
         recordDef = OrderedDict()
         while True:
             line = self._fd.readline()
@@ -63,17 +63,19 @@ class PEIReader(ReaderBase):
                 inRecordDef = True
                 continue
             if line.startswith(b'BEGIN'):
+                begin = True
                 continue
             # read record definition
-            if inRecordDef:
+            if inRecordDef and begin:
                 item = line.rstrip(b'\r\n').split(b',')
                 name = item[0].decode('utf-8')
+                print (item)
                 recordDef[name] = {
                     'length' : int(item[1]),
                     'type': item[2].decode('utf-8').rstrip('*'),
                     'is_spectrum': item[2].decode('utf-8').endswith('*'),
                     'multiplier': float(item[3]) if item[3] not in (b'0', b'1') else None,
-                    'unit': item[5].decode('utf-8') if item[5] != b'0' else None,
+                    'unit': item[5].decode('utf-8', errors='replace') if item[5] != b'0' else None,
                     'alias': item[6].decode('utf-8'),
                     'is_ignored' : name in self._attrbsIgnore
                 }
