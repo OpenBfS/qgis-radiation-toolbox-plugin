@@ -76,7 +76,6 @@ class PEIReader(ReaderBase):
                     'is_spectrum': item[2].decode('utf-8').endswith('*'),
                     'multiplier': float(item[3]) if item[3] not in (b'0', b'1') else None,
                     'unit': item[5].decode('utf-8', errors='replace') if item[5] != b'0' else None,
-                    'alias': item[6].decode('utf-8'),
                     'is_ignored' : name in self._attrbsIgnore
                 }
 
@@ -154,7 +153,6 @@ class PEIReader(ReaderBase):
             return {
                 'attribute': name,
                 'qtype':  qtype,
-                'alias': rdef['alias']
             }
 
         defs = []

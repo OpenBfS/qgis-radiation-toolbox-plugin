@@ -203,7 +203,8 @@ class LayerBase(QgsVectorLayer):
             attrbs.append(QgsField(
                 row['attribute'], eval("QVariant.{}".format(row['qtype']))
             ))
-            aliases.append(row['alias'].replace('_', ' '))
+            if 'alias' in row and row['alias']:
+                aliases.append(row['alias'].replace('_', ' '))
 
         def processAttributes(csv_attrbs, limit):
             attrbs = []
