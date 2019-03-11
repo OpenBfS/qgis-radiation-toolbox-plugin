@@ -9,6 +9,11 @@ class PEIReader(ReaderBase):
     def __init__(self, filepath):
         super(PEIReader, self).__init__(filepath, rb=True)
 
+        # attributes to be ignored, see
+        # https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin/issues/37#note_149160559
+        # must be defined before calling self._header()
+        self._attrbsIgnore = [ 'ISP1U' ]
+
         self._header()
         self._fd.read(3) # data starts after 3 bytes
 
@@ -62,13 +67,15 @@ class PEIReader(ReaderBase):
             # read record definition
             if inRecordDef:
                 item = line.rstrip(b'\r\n').split(b',')
-                recordDef[item[0].decode('utf-8')] = {
+                name = item[0].decode('utf-8')
+                recordDef[name] = {
                     'length' : int(item[1]),
                     'type': item[2].decode('utf-8').rstrip('*'),
                     'is_spectrum': item[2].decode('utf-8').endswith('*'),
                     'multiplier': float(item[3]) if item[3] not in (b'0', b'1') else None,
                     'unit': item[5].decode('utf-8') if item[5] != b'0' else None,
-                    'alias': item[6].decode('utf-8')
+                    'alias': item[6].decode('utf-8'),
+                    'is_ignored' : name in self._attrbsIgnore
                 }
 
         self._recordDef = recordDef
@@ -112,12 +119,13 @@ class PEIReader(ReaderBase):
             if rdef['is_spectrum']:
                 for i in range(rdef['length']):
                     # TODO: how to process ?
-                    self._readValue(dtype, nbytes, rdef['multiplier'])
-                value = None
+                    value = self._readValue(dtype, nbytes, rdef['multiplier'])
+                    if not rdef['is_ignored']:
+                        item['{}{}'.format(name, i+1)] = value
             else:
                 value = self._readValue(dtype, nbytes, rdef['multiplier'])
-
-            item[name] = value
+                if not rdef['is_ignored']:
+                    item[name] = value
 
         return item
 
@@ -136,16 +144,33 @@ class PEIReader(ReaderBase):
     def attributeDefs(self):
         """Get attribute definitions from file.
         """
-        defs = []
-        for name, rdefs in self._recordDef.items():
-            qtype = self._dataqtype_conv[rdefs['type']]
-            if rdefs['multiplier']:
+        def addAttribute(name, rdef):
+            qtype = self._dataqtype_conv[rdef['type']]
+            if rdef['multiplier']:
                 qtype = 'Double'
-            defs.append(
-                { 'attribute': name,
-                  'qtype':  qtype,
-                  'alias': rdefs['alias']
-                }
-            )
+
+            return {
+                'attribute': name,
+                'qtype':  qtype,
+                'alias': rdef['alias']
+            }
+
+        defs = []
+        for name, rdef in self._recordDef.items():
+            if rdef['is_ignored']:
+                continue
+            if rdef['is_spectrum']:
+                for i in range(rdef['length']):
+                    defs.append(
+                        addAttribute(
+                            '{}{}'.format(name, i+1), rdef
+                        )
+                    )
+            else:
+                defs.append(
+                    addAttribute(
+                        name, rdef
+                    )
+                )
 
         return defs
