@@ -1,6 +1,11 @@
+import os
+import sys
+
 from qgis.core import QgsFeature, QgsPointXY, QgsGeometry
  
 from . import LayerBase, LayerType
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from style.ers import ERSStyle
 
 class ERSLayer(LayerBase):
     def __init__(self, fileName, storageFormat):
@@ -13,6 +18,9 @@ class ERSLayer(LayerBase):
 
         # layer type
         self.layerType = LayerType.ERS
+
+        # style
+        self._style = ERSStyle()
 
     def _item2feat(self, item):
         """Create QgsFeature from data item.

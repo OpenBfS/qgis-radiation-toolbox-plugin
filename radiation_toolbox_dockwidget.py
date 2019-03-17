@@ -39,6 +39,8 @@ from .layer.exceptions import LoadError
 from .reader.logger import ReaderLogger
 from .safecast_stats import SafecastStats
 from .layer import LayerType
+from .style import StyleError
+
 try:
     from .safecast_plot import SafecastPlot
     plotMsg = None
@@ -89,8 +91,6 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # settings (must be called before _initStyles()
         self._settings = QSettings("OpenGeoLabs", PLUGIN_NAME)
-        # load styles options
-        ### self._initStyles()
         # load settings
         self._loadSettings()
 
@@ -168,19 +168,8 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         :param layer: layer used for initialization
         """
-        layerType = self._getLayerType(layer)
-        if layerType == LayerType.Safecast:
-            from styles.safecast import SafecastStyles
-            self._styles = SafecastStyles()
-        elif layerType == LayerType.ERS:
-            from styles.ers import ERSStyles
-            self._styles = ERSStyles()
-        else:
-            from styles import Styles
-            self._styles = Styles()
-
         self.styleBox.clear()
-        for item in self._styles:
+        for item in layer.style():
             self.styleBox.addItem(item['name'])
         self.styleBox.setCurrentIndex(0)
 
@@ -298,22 +287,6 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # add items
         self.onlineMapsCombo.addItems(list(item[0] for item in self._onlineMaps))
 
-    def stylePath(self):
-        """Get style path (when local QML files are located).
-
-        :return: path given as a string
-        """
-        try:
-            stylePath = self._styles[self.styleBox.currentIndex()]['file']
-        except IndexError:
-            return None
-        if not os.path.isfile(stylePath):
-            raise RadiationToolboxError(
-                self.tr("Style '{}' not found").format(stylePath
-        ))
-
-        return stylePath
-    
     def closeEvent(self, event):
         """Close plugin.
 
@@ -413,9 +386,9 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             # set style
             # must be called after each loading since file extension can change
             self._initStyles(layer)
-            layer.loadNamedStyle(self.stylePath())
+            layer.setStyle(self.styleBox.currentIndex())
             layer.setAliases() # loadNameStyle removes aliases (why?)
-        except (RadiationToolboxError, LoadError) as e:
+        except (RadiationToolboxError, LoadError, StyleError) as e:
             # show error message on failure
             iface.messageBar().clearWidgets()
             iface.messageBar().pushMessage(self.tr("Critical"),
@@ -468,9 +441,9 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # apply new style on currently selected layer
         try:
-            layer.loadNamedStyle(self.stylePath())
+            layer.setStyle(self.styleBox.currentIndex())
             layer.setAliases() # loadNameStyle removes aliases (why?)
-        except RadiationToolboxError as e:
+        except (RadiationToolboxError, StyleError) as e:
             # print error message on failure
             QtWidgets.QMessageBox.critical(
                 None, self.tr("Error"),

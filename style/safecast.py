@@ -1,10 +1,10 @@
 import os
 
-from . import Styles
+from . import Style
 
-class SafecastStyles(Styles):
+class SafecastStyle(Style):
     def __init__(self):
-        super(SafecastStyles, self).__init__()
+        super(SafecastStyle, self).__init__()
 
         stylePath = os.path.join(os.path.dirname(__file__), "safecast")
         self._styles = [

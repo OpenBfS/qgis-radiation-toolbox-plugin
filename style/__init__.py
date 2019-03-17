@@ -1,6 +1,9 @@
 import os
 
-class Styles:
+class StyleError(Exception):
+    pass
+
+class Style:
     def __init__(self):
         self._styles = []
         

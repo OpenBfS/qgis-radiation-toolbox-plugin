@@ -18,6 +18,7 @@ from .exceptions import LoadError
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from plugin_type import PLUGIN_NAME
+from style import Style, StyleError
 
 class LayerType(Enum):
     Safecast = 0
@@ -50,6 +51,9 @@ class LayerBase(QgsVectorLayer):
 
         # layer type not defined
         self.layerType = None
+
+        # style
+        self._style = Style()
 
     def load(self, reader):
         """Load input data by specified reader.
@@ -277,3 +281,18 @@ class LayerBase(QgsVectorLayer):
         """
         for i in range(0, len(self._aliases)):
             self.setFieldAlias(i, self._aliases[i])
+
+    def setStyle(self, idx):
+        try:
+            stylePath = self._style[idx]['file']
+        except IndexError:
+            return None
+        if not os.path.isfile(stylePath):
+            raise StyleError(
+                self.tr("Style '{}' not found").format(stylePath
+        ))
+
+        self.loadNamedStyle(stylePath)
+
+    def style(self):
+        return self._style

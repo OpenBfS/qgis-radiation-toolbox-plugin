@@ -37,6 +37,7 @@ from . import LayerBase, LayerType
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from plugin_type import PLUGIN_NAME
+from style.safecast import SafecastStyle
 
 class SafecastWriterError(Exception):
     """Safecast writer error class.
@@ -72,6 +73,9 @@ class SafecastLayer(LayerBase):
 
         # layer type
         self.layerType = LayerType.Safecast
+
+        # style
+        self._style = SafecastStyle()
 
     def load(self, reader):
         """Load LOG file using specified reader.
