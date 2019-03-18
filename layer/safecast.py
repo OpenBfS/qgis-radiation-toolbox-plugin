@@ -207,11 +207,11 @@ class SafecastLayerHelper(object):
         self._layer = layer
         if isinstance(layer, SafecastLayer):
             self._storageFormat = layer.storageFormat
-            self._skipNumAttrbs = 7 if self._storageFormat == 'ogr' else 6
+            self._skipNumAttrbs = 6 if self._storageFormat == 'memory' else 7
             self._fileName = layer._fileName
         else:
-            # assuming SQLite (ogr)
-            self._storageFormat = "ogr"
+            # assuming SQLite
+            self._storageFormat = "SQLite"
             # better to be stored in metadata than hardcoded
             self._skipNumAttrbs = 7
             self._fileName = layer.dataProvider().dataSourceUri().split('|')[0]
@@ -461,7 +461,7 @@ class SafecastLayerHelper(object):
         ### https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/27/updating-attributes-takes-several-minutes
         conn = connCur = None
         useSqlite3 = True
-        if useSqlite3 and self._storageFormat == "ogr":
+        if useSqlite3 and self._storageFormat == "SQLite":
             import sqlite3
 
             idx = 1 # skip FID column for SQLite storage
