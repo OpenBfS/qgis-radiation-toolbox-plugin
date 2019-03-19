@@ -169,6 +169,9 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         :param layer: layer used for initialization
         """
         self.styleBox.clear()
+        if not layer:
+            return
+
         for item in layer.style():
             self.styleBox.addItem(item['name'])
         self.styleBox.setCurrentIndex(0)
