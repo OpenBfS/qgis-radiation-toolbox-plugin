@@ -203,6 +203,10 @@ class SafecastLayer(LayerBase):
         return feat
 
     def setStyle(self, idx):
+        """Set layer style.
+
+        :param int idx: style (combobox) index
+        """
         try:
             stylePath = self._style[idx]['file']
         except (IndexError, KeyError):

@@ -21,6 +21,7 @@ class ERSLayer(LayerBase):
 
         # style
         self._style = ERSStyle()
+        self._renderer = None
 
     def _item2feat(self, item):
         """Create QgsFeature from data item.
@@ -45,12 +46,13 @@ class ERSLayer(LayerBase):
         """
         numberOfClasses = 6
 
-        renderer = QgsGraduatedSymbolRenderer()
-        renderer.setClassAttribute("DHSR")
-        renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
-        renderer.updateClasses(
-            self, QgsGraduatedSymbolRenderer.EqualInterval, numberOfClasses
-        )
-        renderer.updateColorRamp(self._style[idx]['colorramp'])
+        if not self._renderer:
+            self._renderer = QgsGraduatedSymbolRenderer()
+            self._renderer.setClassAttribute("DHSR")
+            self._renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
+            self._renderer.updateClasses(
+                self, QgsGraduatedSymbolRenderer.EqualInterval, numberOfClasses
+            )
+            self.setRenderer(self._renderer)
 
-        self.setRenderer(renderer)
+        self._renderer.updateColorRamp(self._style[idx]['colorramp'])

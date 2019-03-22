@@ -710,7 +710,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # re-initialize styles
         self._initStyles(layer)
 
-        enabled = True if layer and self._getLayerType(layer) == LayerType.Safecast else False
+        enabled = True if layer and self._getLayerType(layer) in (LayerType.Safecast, LayerType.ERS) else False
         # if enabled:
         #     iface.messageBar().pushMessage(
         #         self.tr("Info"),
