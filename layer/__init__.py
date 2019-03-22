@@ -283,16 +283,7 @@ class LayerBase(QgsVectorLayer):
             self.setFieldAlias(i, self._aliases[i])
 
     def setStyle(self, idx):
-        try:
-            stylePath = self._style[idx]['file']
-        except IndexError:
-            return None
-        if not os.path.isfile(stylePath):
-            raise StyleError(
-                self.tr("Style '{}' not found").format(stylePath
-        ))
-
-        self.loadNamedStyle(stylePath)
+        pass
 
     def style(self):
         return self._style

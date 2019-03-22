@@ -202,6 +202,18 @@ class SafecastLayer(LayerBase):
 
         return feat
 
+    def setStyle(self, idx):
+        try:
+            stylePath = self._style[idx]['file']
+        except (IndexError, KeyError):
+            return None
+        if not os.path.isfile(stylePath):
+            raise StyleError(
+                self.tr("Style '{}' not found").format(stylePath
+        ))
+
+        self.loadNamedStyle(stylePath)
+
 class SafecastLayerHelper(object):
     def __init__(self, layer):
         self._layer = layer
