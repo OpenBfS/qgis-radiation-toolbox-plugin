@@ -26,6 +26,9 @@ class ERSReader(ReaderBase):
                             item['{}{}'.format(k, idx)] = s_v
                             idx += 1
                     else:
+                        # https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin/issues/38#note_153255013
+                        if ',' in v and k == 'DHSR':
+                            v = v.replace(',', '.')
                         item[k] = v
 
                 return item
