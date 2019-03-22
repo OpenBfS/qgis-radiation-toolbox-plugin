@@ -10,10 +10,13 @@ class ERSStyle(Style):
 
         stylePath = os.path.join(os.path.dirname(__file__), "ers")
 
-        styleFactory = QgsStyle()
-        styleFactory.importXml(os.path.join(stylePath, 'color_ramps.xml'))
+        self._styleFactory = QgsStyle()
+        self._styleFactory.importXml(os.path.join(stylePath, 'color_ramps.xml'))
 
-        for styleName in styleFactory.colorRampNames():
+        for styleName in self._styleFactory.colorRampNames():
             self._styles.append(
-                {'name' : styleName}
+                {
+                    'name' : styleName,
+                    'colorramp' : self._styleFactory.colorRamp(styleName)
+                }
             )

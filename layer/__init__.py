@@ -283,7 +283,15 @@ class LayerBase(QgsVectorLayer):
             self.setFieldAlias(i, self._aliases[i])
 
     def setStyle(self, idx):
+        """Set layer style.
+
+        :param int idx: style (combobox) index
+        """
         pass
 
     def style(self):
+        """Get style.
+
+        :return: style class
+        """
         return self._style
