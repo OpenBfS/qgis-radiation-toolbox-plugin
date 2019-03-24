@@ -44,7 +44,7 @@ class ERSLayer(LayerBase):
 
         :param int idx: style (combobox) index
         """
-        numberOfClasses = 6
+        numberOfClasses = 10
 
         if not self._renderer:
             self._renderer = QgsGraduatedSymbolRenderer()
