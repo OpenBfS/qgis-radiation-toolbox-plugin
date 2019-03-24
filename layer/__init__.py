@@ -304,7 +304,7 @@ class LayerBase(QgsVectorLayer):
         config = self.attributeTableConfig()
         columns = config.columns()
         for column in columns:
-            if column.name in fields:
+            if column.name.lower() in fields:
                 column.hidden = True
         config.setColumns(columns)
         self.setAttributeTableConfig(config)

@@ -35,6 +35,6 @@ class PEILayer(LayerBase):
         hideFields = []
         for i in range(1, 11):
             hideFields.append(
-                "{0}{1:02d}".format('ISPG', i)
+                "{0}{1:02d}".format('ispg', i)
             )
         self._setHideFields(hideFields)
