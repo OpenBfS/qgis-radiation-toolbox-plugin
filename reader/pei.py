@@ -13,10 +13,6 @@ class PEIReader(ReaderBase):
         # https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin/issues/37#note_149160559
         # must be defined before calling self._header()
         self._attrbsIgnore = [ 'ISP1U' ]
-        for i in range(1, 11):
-            self._attrbsIgnore.append(
-                "{0}{1:02d}".format('ISPG', i)
-            )
 
         self._header()
         self._fd.read(3) # data starts after 3 bytes
@@ -73,7 +69,6 @@ class PEIReader(ReaderBase):
             if inRecordDef and begin:
                 item = line.rstrip(b'\r\n').split(b',')
                 name = item[0].decode('utf-8')
-                print (item)
                 recordDef[name] = {
                     'length' : int(item[1]),
                     'type': item[2].decode('utf-8').rstrip('*'),

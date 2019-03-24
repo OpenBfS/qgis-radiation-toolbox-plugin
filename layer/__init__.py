@@ -295,3 +295,16 @@ class LayerBase(QgsVectorLayer):
         :return: style class
         """
         return self._style
+
+    def _setHideFields(self, fields):
+        """Set hide fields.
+
+        :param list fields: list of fields
+        """
+        config = self.attributeTableConfig()
+        columns = config.columns()
+        for column in columns:
+            if column.name in fields:
+                column.hidden = True
+        config.setColumns(columns)
+        self.setAttributeTableConfig(config)

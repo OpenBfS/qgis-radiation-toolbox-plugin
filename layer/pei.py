@@ -27,3 +27,14 @@ class PEILayer(LayerBase):
         feat.setAttributes(list(item.values()))
 
         return feat
+
+    def load(self, reader):
+        super(PEILayer, self).load(reader)
+
+        # hide defined fields
+        hideFields = []
+        for i in range(1, 11):
+            hideFields.append(
+                "{0}{1:02d}".format('ISPG', i)
+            )
+        self._setHideFields(hideFields)
