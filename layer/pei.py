@@ -28,13 +28,24 @@ class PEILayer(LayerBase):
 
         return feat
 
+
+    def _setShownFields(self, fields):
+        """Set shown fields.
+
+        :param list fields: list of fields
+        """
+        config = self.attributeTableConfig()
+        columns = config.columns()
+        for column in columns:
+            print (column.name.lower(), fields)
+            if column.name.lower() not in fields:
+                column.hidden = True
+        config.setColumns(columns)
+        self.setAttributeTableConfig(config)
+
     def load(self, reader):
         super(PEILayer, self).load(reader)
 
-        # hide defined fields
-        hideFields = []
-        for i in range(1, 11):
-            hideFields.append(
-                "{0}{1:02d}".format('ispg', i)
-            )
-        self._setHideFields(hideFields)
+        with open(self._attributesCSVFile()) as fd:
+            fields = list(map(lambda x: x.lower(), fd.read().splitlines()))
+            self._setShownFields(fields)

@@ -246,9 +246,7 @@ class LayerBase(QgsVectorLayer):
         if not defs:
             # predefined attributes (CSV file)
             # Safecast, ERS
-            csv_file = os.path.join(
-                os.path.dirname(__file__),
-                os.path.splitext(inspect.getfile(self.__class__))[0] + '.csv')
+            csv_file = _attributesCSVFile()
             if not os.path.exists(csv_file):
                 return []
 
@@ -296,15 +294,8 @@ class LayerBase(QgsVectorLayer):
         """
         return self._style
 
-    def _setHideFields(self, fields):
-        """Set hide fields.
-
-        :param list fields: list of fields
-        """
-        config = self.attributeTableConfig()
-        columns = config.columns()
-        for column in columns:
-            if column.name.lower() in fields:
-                column.hidden = True
-        config.setColumns(columns)
-        self.setAttributeTableConfig(config)
+    def _attributesCSVFile(self):
+        return os.path.join(
+            os.path.dirname(__file__),
+            os.path.splitext(inspect.getfile(self.__class__))[0] + '.csv'
+        )
