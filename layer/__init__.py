@@ -10,7 +10,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtCore import QVariant
 
 from qgis.utils import iface, Qgis
-from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog, QgsField
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog, QgsField, QgsGraduatedSymbolRenderer
 
 from osgeo import ogr
 
@@ -246,7 +246,7 @@ class LayerBase(QgsVectorLayer):
         if not defs:
             # predefined attributes (CSV file)
             # Safecast, ERS
-            csv_file = _attributesCSVFile()
+            csv_file = self._attributesCSVFile()
             if not os.path.exists(csv_file):
                 return []
 
@@ -285,7 +285,36 @@ class LayerBase(QgsVectorLayer):
 
         :param int idx: style (combobox) index
         """
-        pass
+        try:
+            style = self._style[idx]
+        except (IndexError, KeyError):
+            return None
+        if 'file' in style:
+            # QML style
+            stylePath = style['file']
+            if not os.path.isfile(stylePath):
+                raise StyleError(
+                    self.tr("Style '{}' not found").format(stylePath
+            ))
+            self.loadNamedStyle(stylePath)
+        elif 'colorramp' in style:
+            if not self._renderer:
+                self._renderer = QgsGraduatedSymbolRenderer()
+                self._renderer.setClassAttribute(style['attribute'])
+                self._renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
+                self._renderer.updateClasses(
+                    self, QgsGraduatedSymbolRenderer.EqualInterval,
+                    style['classes']
+                )
+                self.setRenderer(self._renderer)
+
+            self._renderer.updateColorRamp(
+                style['colorramp']
+            )
+        else:
+            raise StyleError(
+                self.tr("Undefined style")
+            )
 
     def style(self):
         """Get style.

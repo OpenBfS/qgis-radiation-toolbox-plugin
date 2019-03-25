@@ -1,7 +1,7 @@
 import os
 import sys
 
-from qgis.core import QgsFeature, QgsPointXY, QgsGeometry, QgsGraduatedSymbolRenderer
+from qgis.core import QgsFeature, QgsPointXY, QgsGeometry
  
 from . import LayerBase, LayerType
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -38,21 +38,3 @@ class ERSLayer(LayerBase):
         feat.setAttributes(list(item.values()))
 
         return feat
-
-    def setStyle(self, idx):
-        """Set layer style.
-
-        :param int idx: style (combobox) index
-        """
-        numberOfClasses = 10
-
-        if not self._renderer:
-            self._renderer = QgsGraduatedSymbolRenderer()
-            self._renderer.setClassAttribute("DHSR")
-            self._renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
-            self._renderer.updateClasses(
-                self, QgsGraduatedSymbolRenderer.EqualInterval, numberOfClasses
-            )
-            self.setRenderer(self._renderer)
-
-        self._renderer.updateColorRamp(self._style[idx]['colorramp'])

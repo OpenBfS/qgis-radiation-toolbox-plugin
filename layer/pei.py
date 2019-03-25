@@ -1,6 +1,7 @@
 from qgis.core import QgsFeature, QgsPointXY, QgsGeometry
 
 from . import LayerBase, LayerType
+from style.pei import PEIStyle
 
 class PEILayer(LayerBase):
     def __init__(self, fileName, storageFormat):
@@ -13,6 +14,9 @@ class PEILayer(LayerBase):
 
         # layer type
         self.layerType = LayerType.PEI
+
+        # style
+        self._style = PEIStyle()
 
     def _item2feat(self, item):
         """Create QgsFeature from data item.

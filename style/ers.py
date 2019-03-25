@@ -17,6 +17,8 @@ class ERSStyle(Style):
             self._styles.append(
                 {
                     'name' : styleName,
-                    'colorramp' : self._styleFactory.colorRamp(styleName)
+                    'colorramp' : self._styleFactory.colorRamp(styleName),
+                    'classes' : 10,
+                    'attribute' : 'DHSR'
                 }
             )
