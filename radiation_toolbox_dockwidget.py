@@ -709,20 +709,15 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         # re-initialize styles
         self._initStyles(layer)
+        self.styleButton.setEnabled(
+            self._getLayerType(layer) in (LayerType.Safecast, LayerType.ERS, LayerType.PEI)
+        )
 
-        enabled = True if layer and self._getLayerType(layer) in (LayerType.Safecast, LayerType.ERS) else False
-        # if enabled:
-        #     iface.messageBar().pushMessage(
-        #         self.tr("Info"),
-        #         self.tr("Updating statistics for {}...".format(layer.name())),
-        #         level=Qgis.Info,
-        #         duration=3
-        #     )
+        enabled = True if layer and self._getLayerType(layer) == LayerType.Safecast else False
         self.actionSave.setEnabled(enabled)
         self.actionSelect.setEnabled(enabled)
         self.actionDeselect.setEnabled(enabled)
         self.actionDelete.setEnabled(enabled)
-        self.styleButton.setEnabled(enabled)
 
         self.actionUpdateStatsPlot.trigger()
 
