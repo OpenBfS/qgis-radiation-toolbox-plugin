@@ -41,7 +41,6 @@ class PEILayer(LayerBase):
         config = self.attributeTableConfig()
         columns = config.columns()
         for column in columns:
-            print (column.name.lower(), fields)
             if column.name.lower() not in fields:
                 column.hidden = True
         config.setColumns(columns)
