@@ -169,7 +169,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         :param layer: layer used for initialization
         """
         self.styleBox.clear()
-        if not layer:
+        if not self._getLayerType(layer):
             return
 
         for item in layer.style():
