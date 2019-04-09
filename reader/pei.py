@@ -151,6 +151,7 @@ class PEIReader(ReaderBase):
 
             return {
                 'attribute': name,
+                'alias': name, # keep upper case also for DB storage
                 'qtype':  qtype,
             }
 
