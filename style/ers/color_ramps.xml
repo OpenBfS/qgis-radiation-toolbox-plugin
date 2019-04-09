@@ -2,13 +2,13 @@
 <qgis_style version="1">
   <symbols/>
   <colorramps>
-    <colorramp type="gradient" name="ERS_colors1_discrete">
+    <colorramp type="gradient" name="dynamic (discrete)" tags="ERS colors discrete">
       <prop k="color1" v="5,5,255,255"/>
       <prop k="color2" v="255,0,0,255"/>
       <prop k="discrete" v="1"/>
       <prop k="stops" v="0.1;51,85,255,255:0.2;59,154,255,255:0.3;36,229,255,255:0.4;112,255,210,255:0.5;182,255,145,255:0.6;228,255,76,255:0.704106;255,234,0,255:0.8;255,170,0,255:0.899758;255,101,0,255"/>
     </colorramp>
-    <colorramp type="gradient" name="ERS_colors2_continuous">
+    <colorramp type="gradient" name="dynamic (continuous)" tags="ERS colors continuous">
       <prop k="color1" v="5,5,255,255"/>
       <prop k="color2" v="255,0,0,255"/>
       <prop k="discrete" v="0"/>
