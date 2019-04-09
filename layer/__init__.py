@@ -8,9 +8,10 @@ from enum import Enum
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import QVariant
+from PyQt5.QtGui import QColor
 
 from qgis.utils import iface, Qgis
-from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog, QgsField, QgsGraduatedSymbolRenderer
+from qgis.core import QgsVectorLayer, QgsVectorFileWriter, QgsMessageLog, QgsField, QgsGraduatedSymbolRenderer, QgsSymbol
 
 from osgeo import ogr
 
@@ -299,7 +300,16 @@ class LayerBase(QgsVectorLayer):
             self.loadNamedStyle(stylePath)
         elif 'colorramp' in style:
             if not self._renderer:
+                # symbol (store transparent)
+                symbol = QgsSymbol.defaultSymbol(self.geometryType())
+                symbol.symbolLayer(0).setStrokeColor(
+                    QColor("transparent")
+                )
+
+                # renderer
                 self._renderer = QgsGraduatedSymbolRenderer()
+                self._renderer.setSourceSymbol(symbol)
+                print (self._renderer.sourceSymbol())
                 self._renderer.setClassAttribute(style['attribute'])
                 self._renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
                 self._renderer.updateClasses(
