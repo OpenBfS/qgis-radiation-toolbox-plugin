@@ -23,7 +23,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="no"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -44,7 +44,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="no"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -65,7 +65,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="no"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -86,7 +86,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="no"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -107,7 +107,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="no"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -128,7 +128,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="no"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -149,7 +149,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="no"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -170,7 +170,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="no"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -191,7 +191,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="solid"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -212,7 +212,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="solid"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
@@ -235,7 +235,7 @@
           <prop k="offset" v="0,0"/>
           <prop k="offset_map_unit_scale" v="0,0,0,0,0,0"/>
           <prop k="offset_unit" v="MM"/>
-          <prop k="outline_color" v="0,0,0,255"/>
+          <prop k="outline_color" v="0,0,0,0"/>
           <prop k="outline_style" v="solid"/>
           <prop k="outline_width" v="0"/>
           <prop k="outline_width_map_unit_scale" v="0,0,0,0,0,0"/>
