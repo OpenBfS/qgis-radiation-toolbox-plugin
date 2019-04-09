@@ -1,5 +1,7 @@
 import os
 
+from qgis.core import QgsStyle
+
 class StyleError(Exception):
     pass
 
@@ -15,3 +17,16 @@ class Style:
 
     def __iter__(self):
         return iter(self._styles)
+
+    def _load_color_ramps(self, filename, attribute, classes=10):
+        self._styleFactory = QgsStyle()
+        self._styleFactory.importXml(filename)
+        for styleName in self._styleFactory.colorRampNames():
+            self._styles.append(
+                {
+                    'name' : styleName,
+                    'colorramp' : self._styleFactory.colorRamp(styleName),
+                    'classes' : classes,
+                    'attribute' : attribute
+                }
+            )

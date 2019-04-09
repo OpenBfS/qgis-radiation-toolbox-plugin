@@ -174,7 +174,11 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
 
         for item in layer.style():
             self.styleBox.addItem(item['name'])
-        self.styleBox.setCurrentIndex(0)
+        # set default style
+        index = 0
+        if self._getLayerType(layer) == LayerType.PEI and layer.formatType() != 'MobDose':
+            index = 1
+        self.styleBox.setCurrentIndex(index)
 
     def _initStats(self, statsWidget=False):
         """Initialize statistics tab.

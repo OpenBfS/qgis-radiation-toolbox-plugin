@@ -52,3 +52,7 @@ class PEILayer(LayerBase):
         with open(self._attributesCSVFile()) as fd:
             fields = list(map(lambda x: x.lower(), fd.read().splitlines()))
             self._setShownFields(fields)
+
+    def formatType(self):
+        field_names = [field.name().lower() for field in self.fields()]
+        return 'MobDose' if 'fastdose' in field_names else 'IRIS'

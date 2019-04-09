@@ -55,6 +55,7 @@ class LayerBase(QgsVectorLayer):
 
         # style
         self._style = Style()
+        self._renderer = None
 
     def load(self, reader):
         """Load input data by specified reader.

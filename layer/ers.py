@@ -21,7 +21,6 @@ class ERSLayer(LayerBase):
 
         # style
         self._style = ERSStyle()
-        self._renderer = None
 
     def _item2feat(self, item):
         """Create QgsFeature from data item.
