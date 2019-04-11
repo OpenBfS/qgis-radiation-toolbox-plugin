@@ -15,7 +15,7 @@ safecast_packager() {
     rm $DIR/icons/radiation*
     rm $DIR/layer/ers* $DIR/layer/pei*
     mv $DIR/metadata_safecast.txt $DIR/metadata.txt
-    rm $DIR/plugin_packager.sh $DIR/plugin_upload.py
+    rm $DIR/plugin_upload.py
     rm $DIR/reader/pei* $DIR/reader/ers*
     rm -r $DIR/style/ers* $DIR/style/pei*
     rm -r $DIR/test $DIR/scripts
