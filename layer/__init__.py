@@ -217,7 +217,7 @@ class LayerBase(QgsVectorLayer):
             aliases = []
 
             if limit:
-                # limit attributes based on input file (first feature) - ERS format specific
+                # limit attributes based on input file (first feature) - ERS/PEI format specific
                 for name in limit:
                     # first try full name match
                     found = False
@@ -256,15 +256,14 @@ class LayerBase(QgsVectorLayer):
                 csv_attrbs = list(csv.DictReader(fd, delimiter=';'))
                 attrbs, aliases = processAttributes(csv_attrbs, limit)
         else:
-            # data-related attributes
+            # data-driven attributes
             # PEI
             attrbs, aliases = processAttributes(defs, limit)
 
-        if limit:
-            if len(attrbs) != len(limit):
-                raise LoadError(
-                    "Number of attributes differs {} vs {}".format(
-                        len(attrbs), len(limit)
+        if limit and len(attrbs) != len(limit):
+            raise LoadError(
+                "Number of attributes differs {} vs {}".format(
+                    len(attrbs), len(limit)
                 ))
 
         if aliases and self.storageFormat != "memory":

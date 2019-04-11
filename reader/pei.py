@@ -69,6 +69,10 @@ class PEIReader(ReaderBase):
             if inRecordDef and begin:
                 item = line.rstrip(b'\r\n').split(b',')
                 name = item[0].decode('utf-8')
+                if name[0].isdigit():
+                    # column name cannot start with a digit
+                    # see https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin/issues/50
+                    name = '_{}'.format(name)
                 recordDef[name] = {
                     'length' : int(item[1]),
                     'type': item[2].decode('utf-8').rstrip('*'),
@@ -148,10 +152,16 @@ class PEIReader(ReaderBase):
             qtype = self._dataqtype_conv[rdef['type']]
             if rdef['multiplier']:
                 qtype = 'Double'
+            if name.startswith('_') and name[1].isdigit():
+                # column name cannot start with a digit
+                # see https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin/issues/50
+                alias = name[1:]
+            else:
+                alias = name
 
             return {
                 'attribute': name,
-                'alias': name, # keep upper case also for DB storage
+                'alias': alias,    # keep upper case also for DB storage
                 'qtype':  qtype,
             }
 
