@@ -14,5 +14,5 @@ def type2name(pt):
         return "Safecast"
 
 # TODO: read type from metadata.txt
-PLUGIN_TYPE = PluginType.Dev
+PLUGIN_TYPE = PluginType.Safecast
 PLUGIN_NAME = type2name(PLUGIN_TYPE)

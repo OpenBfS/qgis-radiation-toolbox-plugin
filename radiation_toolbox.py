@@ -55,7 +55,8 @@ class RadiationToolbox:
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'RadiationToolbox_{}.qm'.format(locale))
+            'radiation_toolbox_{}.qm'.format(locale)
+        )
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -66,7 +67,7 @@ class RadiationToolbox:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Radiation Toolbox')
+        self.menu = PLUGIN_NAME
 
         #print "** INITIALIZING RadiationToolbox"
 
@@ -172,7 +173,7 @@ class RadiationToolbox:
         )
         self.add_action(
             icon_path,
-            text=self.tr(PLUGIN_NAME),
+            text=PLUGIN_NAME,
             callback=self.run,
             parent=self.iface.mainWindow())
 
@@ -198,7 +199,7 @@ class RadiationToolbox:
 
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(PLUGIN_NAME),
+                PLUGIN_NAME,
                 action)
             self.iface.removeToolBarIcon(action)
 

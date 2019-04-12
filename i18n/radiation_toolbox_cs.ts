@@ -1,187 +1,386 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.1" language="cs_CZ">
+<!DOCTYPE TS><TS version="2.0" language="cs_CZ" sourcelanguage="">
 <context>
-    <name>Safecast</name>
+    <name>LayerBase</name>
     <message>
-        <location filename="../safecast_plugin.py" line="197"/>
-        <source>&amp;Safecast</source>
-        <translation>&amp;Safecast</translation>
+        <location filename="../layer/__init__.py" line="69"/>
+        <source>Loading data...</source>
+        <translation type="unfinished">Načítám data...</translation>
     </message>
     <message>
-        <location filename="../safecast_plugin.py" line="171"/>
-        <source>Safecast</source>
-        <translation>Safecast</translation>
+        <location filename="../layer/__init__.py" line="118"/>
+        <source>Warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../layer/__init__.py" line="118"/>
+        <source>{} invalid measurement(s) skipped (see message log for details)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../layer/__init__.py" line="136"/>
+        <source>Data loaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../layer/__init__.py" line="136"/>
+        <source>{} features loaded (in {:.2f} sec).</source>
+        <translation type="unfinished">{} bodů načteno (během {:.2f} sec).</translation>
+    </message>
+    <message>
+        <location filename="../layer/__init__.py" line="160"/>
+        <source>Unable to create SQLite datasource: {}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../layer/__init__.py" line="297"/>
+        <source>Style &apos;{}&apos; not found</source>
+        <translation type="unfinished">Styl &apos;{}&apos; nenalezen</translation>
+    </message>
+    <message>
+        <location filename="../layer/__init__.py" line="325"/>
+        <source>Undefined style</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
-    <name>SafecastDockWidget</name>
+    <name>RadiationToolboxDockWidget</name>
     <message>
-        <location filename="../safecast_dockwidget.py" line="130"/>
-        <source>Style &apos;{}&apos; not found</source>
-        <translation>Styl &apos;{}&apos; nenalezen</translation>
+        <location filename="../radiation_toolbox_dockwidget.py" line="198"/>
+        <source>Load or select Safecast layer in order to display ader statistics.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="156"/>
-        <source>Load Safecast LOG file</source>
-        <translation>Načíst Safecast LOG soubor</translation>
+        <location filename="../radiation_toolbox_dockwidget.py" line="234"/>
+        <source>Statistics</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="241"/>
-        <source>LOG file (*.LOG)</source>
-        <translation>LOG soubor (*.LOG)</translation>
+        <location filename="../radiation_toolbox_dockwidget.py" line="252"/>
+        <source>Load or select Safecast layer in order to display ader plot.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="267"/>
-        <source>Error</source>
-        <translation>Chyba</translation>
+        <location filename="../radiation_toolbox_dockwidget.py" line="707"/>
+        <source>Plot</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="185"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="333"/>
+        <source>Load radiation data file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="402"/>
+        <source>Critical</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="384"/>
+        <source>Unsupported file extension {}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="402"/>
         <source>Failed to load input file &apos;{0}&apos;.
 
 Details: {1}</source>
-        <translation>Selhalo načtení vstupního souboru &apos;{0}&apos;.
+        <translation type="unfinished">Selhalo načtení vstupního souboru &apos;{0}&apos;.
 
 Detaily: {1}</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="219"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="521"/>
+        <source>Error</source>
+        <translation type="unfinished">Chyba</translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="456"/>
         <source>Failed to apply style: {0}</source>
-        <translation>Selhalo použití stylu: {0}</translation>
+        <translation type="unfinished">Selhalo použití stylu: {0}</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="241"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="481"/>
+        <source>Invalid Safecast layer</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="488"/>
         <source>Save layer as new LOG file</source>
-        <translation>Uložit vrstvu jako nový LOG soubor</translation>
+        <translation type="unfinished">Uložit vrstvu jako nový LOG soubor</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="255"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="488"/>
+        <source>LOG file (*.LOG)</source>
+        <translation type="unfinished">LOG soubor (*.LOG)</translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="507"/>
         <source>Overwrite?</source>
-        <translation>Přepsat?</translation>
+        <translation type="unfinished">Přepsat?</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="255"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="507"/>
         <source>File {} already exists. Do you want to overwrite it?.</source>
-        <translation>Soubor {} již existuje. Chcete ho přepsat?.</translation>
+        <translation type="unfinished">Soubor {} již existuje. Chcete ho přepsat?.</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="267"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="521"/>
         <source>Failed to save LOG file: {0}</source>
-        <translation>Selhalo uložení LOG souboru: {0}</translation>
+        <translation type="unfinished">Selhalo uložení LOG souboru: {0}</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="313"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="566"/>
         <source>Delete?</source>
-        <translation>Smazat?</translation>
+        <translation type="unfinished">Smazat?</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="313"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="566"/>
         <source>Do you want to delete {} selected features? This operation cannot be reverted.</source>
-        <translation>Chcete smazat {} vybraných bodů? Tato operace je nevratná.</translation>
+        <translation type="unfinished">Chcete smazat {} vybraných bodů? Tato operace je nevratná.</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="344"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="630"/>
         <source>Info</source>
-        <translation>Info</translation>
+        <translation type="unfinished">Info</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="328"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="591"/>
         <source>No features selected. Nothing to be deleled.</source>
-        <translation>Nic nevybráno. Není co smazat.</translation>
+        <translation type="unfinished">Nic nevybráno. Není co smazat.</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="342"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="628"/>
         <source>No layer loaded or selected</source>
-        <translation>Žádná vrstva není načtena nebo vybrána</translation>
+        <translation type="unfinished">Žádná vrstva není načtena nebo vybrána</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget.py" line="344"/>
+        <location filename="../radiation_toolbox_dockwidget.py" line="630"/>
         <source>No active layer available.</source>
-        <translation>Žádná aktivní vrstva není k dispozici.</translation>
+        <translation type="unfinished">Žádná aktivní vrstva není k dispozici.</translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="669"/>
+        <source>Measured points</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="674"/>
+        <source>Layer statistics - {}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="675"/>
+        <source>Route information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="675"/>
+        <source>average speed (km/h)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="675"/>
+        <source>total monitoring time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="675"/>
+        <source>total distance (km)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="675"/>
+        <source>Radiation values</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="675"/>
+        <source>maximum dose rate (microSv/h)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="675"/>
+        <source>average dose rate (microSv/h)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="675"/>
+        <source>total dose (microSv)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget.py" line="703"/>
+        <source>Layer plot - {}</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
-    <name>SafecastDockWidgetBase</name>
+    <name>RadiationToolboxDockWidgetBase</name>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="26"/>
-        <source>Safecast</source>
-        <translation>Safecast</translation>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="26"/>
+        <source>Radiation Toolbox (DEV)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="43"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="46"/>
         <source>Load and Edit</source>
-        <translation>Načíst a Upravit</translation>
+        <translation type="unfinished">Načíst a Upravit</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="55"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="282"/>
         <source>Style:</source>
-        <translation>Styl:</translation>
+        <translation type="unfinished">Styl:</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="74"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="80"/>
         <source>Apply</source>
-        <translation>Použít</translation>
+        <translation type="unfinished">Použít</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="107"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="104"/>
+        <source>Stats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="134"/>
+        <source>ADER statistics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="148"/>
+        <source>Plot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="170"/>
+        <source>ADER plot</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="178"/>
+        <source>Maps</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="200"/>
+        <source>Online maps</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="212"/>
+        <source>Add</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="228"/>
+        <source>Map:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="252"/>
+        <source>Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="274"/>
+        <source>Plot settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="290"/>
+        <source>Lines</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="295"/>
+        <source>Points</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="334"/>
+        <source>Storage settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="340"/>
+        <source>Format:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="348"/>
+        <source>SQLite</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="353"/>
+        <source>GeoPackage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="358"/>
+        <source>Memory</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="379"/>
         <source>Import</source>
-        <translation>Načíst</translation>
+        <translation type="unfinished">Načíst</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="110"/>
-        <source>Import LOG file as new layer</source>
-        <translation>Načíst LOG soubor jako novou vrstvu</translation>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="382"/>
+        <source>Import radiation data</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="113"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="385"/>
         <source>Ctrl+I</source>
-        <translation>Ctrl+I</translation>
+        <translation type="unfinished">Ctrl+I</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="122"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="394"/>
         <source>Save</source>
-        <translation>Uložit</translation>
+        <translation type="unfinished">Uložit</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="125"/>
-        <source>Save layer as new LOG file</source>
-        <translation>Uložit vrstvu jako nový LOG soubor</translation>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="397"/>
+        <source>Save layer into new file</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="128"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="400"/>
         <source>Ctrl+S</source>
-        <translation>Ctrl+S</translation>
+        <translation type="unfinished">Ctrl+S</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="137"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="409"/>
         <source>Select</source>
-        <translation>Vybrat</translation>
+        <translation type="unfinished">Vybrat</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="140"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="412"/>
         <source>Select features to cut</source>
-        <translation>Vyberte body k odstranění</translation>
+        <translation type="unfinished">Vyberte body k odstranění</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="149"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="421"/>
         <source>Deselect</source>
-        <translation>Zrušit výběr</translation>
+        <translation type="unfinished">Zrušit výběr</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="152"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="424"/>
         <source>Deselect features</source>
-        <translation>Zrušit výběr bodů</translation>
+        <translation type="unfinished">Zrušit výběr bodů</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="161"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="433"/>
         <source>Delete</source>
-        <translation>Smazat</translation>
+        <translation type="unfinished">Smazat</translation>
     </message>
     <message>
-        <location filename="../safecast_dockwidget_base.ui" line="164"/>
+        <location filename="../radiation_toolbox_dockwidget_base.ui" line="436"/>
         <source>Delete selected features</source>
-        <translation>Smazat vybrané body</translation>
+        <translation type="unfinished">Smazat vybrané body</translation>
     </message>
 </context>
 <context>
@@ -189,117 +388,156 @@ Detaily: {1}</translation>
     <message>
         <location filename="../safecast_layer.py" line="86"/>
         <source>ADER microSv/h</source>
-        <translation>ADER microSv/h</translation>
+        <translation type="obsolete">ADER microSv/h</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="87"/>
         <source>Local time</source>
-        <translation>Místní čas</translation>
+        <translation type="obsolete">Místní čas</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="88"/>
         <source>Device</source>
-        <translation>Zařízení</translation>
+        <translation type="obsolete">Zařízení</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="89"/>
         <source>Device ID</source>
-        <translation>ID zařízení</translation>
+        <translation type="obsolete">ID zařízení</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="90"/>
         <source>Datetime</source>
-        <translation>Datum a čas</translation>
+        <translation type="obsolete">Datum a čas</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="91"/>
         <source>CPM</source>
-        <translation>CPM</translation>
+        <translation type="obsolete">CPM</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="92"/>
         <source>Pulses 5sec</source>
-        <translation>Impulzů za 5s</translation>
+        <translation type="obsolete">Impulzů za 5s</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="93"/>
         <source>Pulses total</source>
-        <translation>Impulzů celkem</translation>
+        <translation type="obsolete">Impulzů celkem</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="94"/>
         <source>Validity</source>
-        <translation>Platnost</translation>
+        <translation type="obsolete">Platnost</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="95"/>
         <source>Latitude (deg)</source>
-        <translation>Zem. šířka (°)</translation>
+        <translation type="obsolete">Zem. šířka (°)</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="96"/>
         <source>Hemisphere</source>
-        <translation>Polokoule</translation>
+        <translation type="obsolete">Polokoule</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="97"/>
         <source>Longitude (deg)</source>
-        <translation>Zem. délka (°)</translation>
+        <translation type="obsolete">Zem. délka (°)</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="98"/>
         <source>East/West</source>
-        <translation>Východ/Západ</translation>
+        <translation type="obsolete">Východ/Západ</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="99"/>
         <source>Altitude</source>
-        <translation>Nadm. výška</translation>
+        <translation type="obsolete">Nadm. výška</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="100"/>
         <source>GPS Validity</source>
-        <translation>Platnost GPS</translation>
+        <translation type="obsolete">Platnost GPS</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="101"/>
         <source>Sat</source>
-        <translation>Sat</translation>
+        <translation type="obsolete">Sat</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="102"/>
         <source>HDOP</source>
-        <translation>HDOP</translation>
+        <translation type="obsolete">HDOP</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="103"/>
         <source>CheckSum</source>
-        <translation>CheckSum</translation>
+        <translation type="obsolete">CheckSum</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="138"/>
         <source>Loading data...</source>
-        <translation>Načítám data...</translation>
+        <translation type="obsolete">Načítám data...</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="159"/>
         <source>Info</source>
-        <translation>Info</translation>
+        <translation type="obsolete">Info</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="159"/>
         <source>{} features loaded (in {:.2f} sec).</source>
-        <translation>{} bodů načteno (během {:.2f} sec).</translation>
+        <translation type="obsolete">{} bodů načteno (během {:.2f} sec).</translation>
     </message>
     <message>
-        <location filename="../safecast_layer.py" line="203"/>
+        <location filename="../layer/safecast.py" line="119"/>
         <source>Failed to read input data. Line: {}</source>
         <translation>Selhalo načtení vstupních dat. Řádek: {}</translation>
     </message>
     <message>
         <location filename="../safecast_layer.py" line="222"/>
         <source>unknown</source>
-        <translation>neznámý</translation>
+        <translation type="obsolete">neznámý</translation>
+    </message>
+</context>
+<context>
+    <name>SafecastLayerHelper</name>
+    <message>
+        <location filename="../layer/safecast.py" line="282"/>
+        <source>Unable to retrive Safecast metadata for selected layer</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>SafecastPlot</name>
+    <message>
+        <location filename="../safecast_plot.py" line="85"/>
+        <source>Distance (km)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../safecast_plot.py" line="90"/>
+        <source>ADER (microSv/h)</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>self._layer</name>
+    <message>
+        <location filename="../layer/safecast.py" line="502"/>
+        <source>Warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../layer/safecast.py" line="502"/>
+        <source>No valid date found. Unable to fix datetime.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../layer/safecast.py" line="537"/>
+        <source>unknown</source>
+        <translation type="unfinished">neznámý</translation>
     </message>
 </context>
 </TS>
