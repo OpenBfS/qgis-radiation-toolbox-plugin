@@ -302,6 +302,18 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.closingPlugin.emit()
         event.accept()
 
+    @staticmethod
+    def _addMapLayer(layer):
+        # add map layer to the canvas (do not add into TOC)
+        QgsProject.instance().addMapLayer(layer, False)
+        # force register layer in TOC as a first item
+        QgsProject.instance().layerTreeRoot().insertLayer(0, layer)
+        # select this layer (this must be done manually since we
+        # are inserting item into layer tree)
+        iface.layerTreeView().setCurrentLayer(layer)
+        # expand layer
+        iface.layerTreeView().currentNode().setExpanded(True)
+
     def onLoad(self):
         """Load LOG file as a new QGIS point map layer.
 
@@ -404,16 +416,8 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                                            level=Qgis.Critical, duration=10)
             return
 
-        # add map layer to the canvas (do not add into TOC)
-        QgsProject.instance().addMapLayer(layer, False)
-        # force register layer in TOC as a first item
-        QgsProject.instance().layerTreeRoot().insertLayer(0, layer)
-        # select this layer (this must be done manually since we
-        # are inserting item into layer tree)
-        iface.layerTreeView().setCurrentLayer(layer)
-        # expand layer
-        iface.layerTreeView().currentNode().setExpanded(True)
-
+        # add map layer to tree view
+        self._addMapLayer(layer)
         # zoom to the new layer (already selected)
         iface.zoomToActiveLayer()
 

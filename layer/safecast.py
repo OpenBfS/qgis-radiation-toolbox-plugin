@@ -460,7 +460,7 @@ class SafecastLayerHelper(object):
         ### switch from QGIS API to SQLite3 API, see
         ### https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/27/updating-attributes-takes-several-minutes
         conn = connCur = None
-        useSqlite3 = True
+        useSqlite3 = False
         if useSqlite3 and self._storageFormat == "SQLite":
             import sqlite3
 
@@ -511,6 +511,7 @@ class SafecastLayerHelper(object):
 
         prev_datetime = None
         features = self._layer.getFeatures()
+        updated_attrs = {}
 
         ader_max = None
         ader_cum = 0
@@ -605,8 +606,13 @@ class SafecastLayerHelper(object):
                 sql += " WHERE ogc_fid = {}".format(feat.id())
                 connCur.execute(sql)
             else:
+                updated = {}
                 for name, value in list(attrs.items()):
-                    self._layer.changeAttributeValue(feat.id(), field_idx[name], value)
+                    updated[field_idx[name]] = value
+                    # self._layer.changeAttributeValue(feat.id(), field_idx[name], value)
+                updated_attrs[feat.id()] = updated
+
+        self._layer.dataProvider().changeAttributeValues(updated_attrs)
 
         # update layer internal statistics
         if count > 0:
