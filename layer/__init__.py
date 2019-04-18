@@ -116,11 +116,11 @@ class LayerBase(QgsVectorLayer):
         if self._errs:
             # report errors if any
             iface.messageBar().pushMessage(
-                self.tr("Warning"),
+                self.tr("Info"),
                 self.tr("{} invalid measurement(s) skipped (see message log for details)").format(
                     sum(self._errs.values())
                 ),
-                level=Qgis.Warning,
+                level=Qgis.Info,
                 duration=5
             )
 
