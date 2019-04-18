@@ -490,8 +490,8 @@ class SafecastLayerHelper(object):
 
         # fix first valid datetime
         first_valid_date = None
-        iter = self._layer.getFeatures()
-        for feat in iter:
+        features = self._layer.getFeatures()
+        for feat in features:
             fdate_time = feat.attribute("date_time")
             if self._checkDate(fdate_time):
                 first_valid_date = datetime.strptime(fdate_time, "%Y-%m-%dT%H:%M:%SZ").date()
@@ -510,7 +510,7 @@ class SafecastLayerHelper(object):
             self._layer.startEditing()
 
         prev_datetime = None
-        iter = self._layer.getFeatures()
+        features = self._layer.getFeatures()
 
         ader_max = None
         ader_cum = 0
@@ -518,7 +518,7 @@ class SafecastLayerHelper(object):
         dist_cum = 0
         self._plot = [[], []]
         start = time.clock()
-        for feat in iter:
+        for feat in features:
             feat_datetime = feat.attribute("date_time")
             # fix date if invalid
             feat_datetime, newdt = self._validateDate(feat_datetime, prev_datetime, first_valid_date)
