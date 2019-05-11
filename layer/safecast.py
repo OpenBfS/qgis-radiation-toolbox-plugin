@@ -456,20 +456,7 @@ class SafecastLayerHelper(object):
                 int(tdhours), int(tdminutes), int(rem)
             )
 
-        ### IMPORTANT
-        ### switch from QGIS API to SQLite3 API, see
-        ### https://bitbucket.org/opengeolabs/qgis-safecast-plugin-dev/issues/27/updating-attributes-takes-several-minutes
-        conn = connCur = None
-        useSqlite3 = False
-        if useSqlite3 and self._storageFormat == "SQLite":
-            import sqlite3
-
-            idx = 1 # skip FID column for SQLite storage
-            conn = sqlite3.connect(self._layer.dataProvider().dataSourceUri().split('|')[0])
-            connCur = conn.cursor()
-        else:
-            idx = 0
-
+        idx = 0
         field_idx = {}
         for name in [ "dose_increment",
                       "time_cumulative",
@@ -594,23 +581,10 @@ class SafecastLayerHelper(object):
             if only_stats:
                 continue
 
-            if connCur:
-                sql = "UPDATE \"{}\" SET".format(self._layer.name())
-                for name, value in list(attrs.items()):
-                    if not value:    # null
-                        continue
-                    if isinstance(value, str): # time
-                        value = "'{}'".format(value)
-                    sql += " {}={},".format(name, value)
-                sql = sql[:-1] # remove last comma
-                sql += " WHERE ogc_fid = {}".format(feat.id())
-                connCur.execute(sql)
-            else:
-                updated = {}
-                for name, value in list(attrs.items()):
-                    updated[field_idx[name]] = value
-                    # self._layer.changeAttributeValue(feat.id(), field_idx[name], value)
-                updated_attrs[feat.id()] = updated
+            updated = {}
+            for name, value in list(attrs.items()):
+                updated[field_idx[name]] = value
+            updated_attrs[feat.id()] = updated
 
         self._layer.dataProvider().changeAttributeValues(updated_attrs)
 
@@ -634,9 +608,6 @@ class SafecastLayerHelper(object):
 
         # save changes
         if not only_stats:
-            if conn:
-                conn.commit()
-                conn.close()
             self._layer.commitChanges()
             self._layer.setReadOnly(True)
 
