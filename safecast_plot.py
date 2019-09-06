@@ -20,7 +20,12 @@
 """
 
 from qgis.PyQt import Qt
-from PyQt5 import Qwt
+try:
+    from PyQt5 import Qwt
+    hasQwt6 = True
+except ImportError:
+    import qwt as Qwt
+    hasQwt6 = False
 
 class SafecastAxis(Qwt.QwtPlotItem):
     """Supports a coordinate system similar to 
@@ -101,7 +106,11 @@ class SafecastPlot(Qwt.QwtPlot):
         x, y = layer.plotData()
 
         # clear plot first & detach curve
-        self.detachItems(Qwt.QwtPlotItem.Rtti_PlotItem, True)
+        if hasQwt6:
+            items = Qwt.QwtPlotItem.Rtti_PlotItem
+        else:
+            items = [Qwt.QwtPlotItem.Rtti_PlotItem]
+        self.detachItems(items, True)
 
         # attach a curve
         self.curve = Qwt.QwtPlotCurve('ader_microSvh')
