@@ -199,6 +199,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
                 self.tr("Load or select Safecast layer in order to display ader statistics."),
                 self.groupStats
             )
+            self._statsLabel.setWordWrap(True)
             self._statsSpacer = QtWidgets.QSpacerItem(
                 20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
             )
@@ -252,6 +253,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
             self._plotLabel = QtWidgets.QLabel(
                 self.tr("Load or select Safecast layer in order to display ader plot.")
                 if not plotMsg else plotMsg, self.groupPlot)
+            self._plotLabel.setWordWrap(True)
             self._plotSpacer = QtWidgets.QSpacerItem(
                 20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
             )
