@@ -1,10 +1,11 @@
-QGIS Safecast Plugin Documentation
+QGIS3 Safecast Plugin Documentation
 ==================================
 
 This plugin allows to easily load data from `Safecast
 <https://en.wikipedia.org/wiki/Safecast_(organization)>`__ radiation
-monitoring devices (LOG file) like :ref:`bGeigie Nano <bgeigie>` into
-QGIS as a new vector point layer. The data are loaded using predefined
+monitoring devices (LOG file) like `bGeigie Nano
+<https://blog.safecast.org/bgeigie-nano/>`__ into
+QGIS3 as a new vector point layer. The data are loaded using predefined
 color style.
 
 The user can, if necessary, easily select and remove unwanted parts of
