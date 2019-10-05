@@ -73,7 +73,7 @@ with higher dose rate levels like Fukushima or Chernobyl.
 
 
 Layer statistics
--------------
+----------------
 
 "Stats" tab provides basic statistics of selected Safecast layer:
 
@@ -98,8 +98,10 @@ Layer statistics
 
 * total dose (microSv)
 
+.. _graph_tab:
+
 Layer graph
--------------
+-----------
 
 "Graph" tab shows you a simple dose rate graph which can be useful for quick checks and easy identification of hotspots.
 
