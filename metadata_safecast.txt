@@ -1,8 +1,8 @@
 [general]
-name=Safecast Plugin (DEV)
+name=Safecast Plugin
 qgisMinimumVersion=3.0
 description=Plugin for loading data from Safecast radiation monitoring devices
-version=2.0alpha
+version=2.0.0
 author=OpenGeoLabs s.r.o.
 email=info@opengeolabs.cz
 
@@ -15,5 +15,5 @@ tags=vector,safecast
 
 homepage=https://opengeolabs.github.io/qgis-safecast-plugin/
 category=Plugins
-icon=icons/safecast_icon_devel.png
-experimental=True
+icon=icons/safecast_icon_stable.png
+experimental=False

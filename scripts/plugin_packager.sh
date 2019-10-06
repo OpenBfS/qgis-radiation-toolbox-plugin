@@ -1,15 +1,18 @@
-#!/bin/bash
+#!/bin/bash -e
 
 # Custom plugin builder
 
 TYPE='safecast'
 
-DIR=/tmp/$TYPE
+DIR=/tmp/qgis-${TYPE}-plugin
 rm -rf $DIR ; mkdir $DIR
 
 safecast_packager() {
     cp -r . $DIR
     (cd $DIR/docs;make html)
+    mkdir $DIR/help
+    cp -r $DIR/docs/build/html/* $DIR/help
+    rm -rf $DIR/docs
     rm -rf $DIR/.git $DIR/.gitignore
     rm -rf $DIR/__pycache__ $DIR/layer/__pycache__ $DIR/reader/__pycache__ $DIR/style/__pycache__
     rm $DIR/icons/radiation*
@@ -21,11 +24,12 @@ safecast_packager() {
     rm -r $DIR/test $DIR/scripts
 
     sed -i 's/PLUGIN_TYPE = PluginType.Dev/PLUGIN_TYPE = PluginType.Safecast/g' $DIR/plugin_type.py
+    sed -i 's/safecast_icon_devel/safecast_icon_stable/g' $DIR/radiation_toolbox.py
 }
 
 zip_packager() {
     cd /tmp
-    zip $TYPE.zip $TYPE -r
+    zip qgis-${TYPE}-plugin.zip qgis-${TYPE}-plugin -r
 }
 
 if [ "$TYPE" == 'safecast' ]; then
