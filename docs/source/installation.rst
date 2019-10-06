@@ -39,7 +39,7 @@ Network* Installer, see `download page
 <https://qgis.org/en/site/forusers/download.html>`__ for details.
 
 Standalone Installer
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 In the case of *Standalone Installer* (QGIS is typically installed in
 :file:`C:\Program Files`) open *OSGeo4W Shell* as administrator. Than
