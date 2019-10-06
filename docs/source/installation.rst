@@ -33,17 +33,33 @@ standard QGIS installation.
 MS Windows
 ^^^^^^^^^^
 
-*PythonQwt* can be installed throuh `OSGeo4W Network Installer
-<https://qgis.org/en/site/forusers/download.html>`__. Choose
-`Advanced Install`. In section `Libs` enable `python3-pythonqwt`
-package in order to install it.
+Installation procedure depends on how QGIS has been installed. On MS
+Windows QGIS can be installed either through *Standalone* or *OSGeo4W
+Network* Installer, see `download page
+<https://qgis.org/en/site/forusers/download.html>`__ for details.
+
+Standalone Installer
+~~~~~~~~~~~~~~~~~~~
+
+In the case of *Standalone Installer* (QGIS is typically installed in
+:file:`C:\Program Files`) open *OSGeo4W Shell* as administrator. Than
+from OSGeo4W command prompt run two commands below:
+
+.. code-block:: bash
+
+   py3_env
+   pip3 install pythonqwt
+
+OSGeo4W Network Installer
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*PythonQwt* can be installed throuh *OSGeo4W Network
+Installer*. Choose `Advanced Install`. In section `Libs` enable
+`python3-pythonqwt` package in order to install it.
 
 .. figure:: images/install_007_osgeo4w_pythonqwt.png
 
    Install `python3-pythonqwt` from OSGeo4W Network Installer.
-
-.. important:: This procedure requires that QGIS has been installed
-   using OSGeo4W Network Installer and not by Standalone Installer!
 
 Ubuntu Linux
 ^^^^^^^^^^^^
