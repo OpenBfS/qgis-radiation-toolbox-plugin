@@ -614,12 +614,12 @@ class SafecastLayerHelper(object):
             # force reload attributes
             self._layer.dataProvider().forceReload()
 
-            QgsMessageLog.logMessage(
-                '{0}: {1} features updated in {2:.2f} sec'.format(
-                    self._layer.name(), self._layer.featureCount(), time.clock() - start),
-                tag=PLUGIN_NAME,
-                level=Qgis.Info
-            )
+            # QgsMessageLog.logMessage(
+            #     '{0}: {1} features updated in {2:.2f} sec'.format(
+            #         self._layer.name(), self._layer.featureCount(), time.clock() - start),
+            #     tag=PLUGIN_NAME,
+            #     level=Qgis.Info
+            # )
 
     def computeStats(self):
         self.recalculateAttributes(only_stats=False)
