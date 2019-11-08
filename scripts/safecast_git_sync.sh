@@ -5,14 +5,14 @@
 DIR=../qgis-safecast-plugin
 
 # docs
-cp -r docs         $DIR/
+cp -rv docs         $DIR/
 # i18n
-cp -r i18n         $DIR/
+cp -rv i18n         $DIR/
 # icons
-cp icons/safecast* $DIR/icons/
-cp icons/tool*     $DIR/icons/
+cp -v icons/safecast* $DIR/icons/
+cp -v icons/tool*     $DIR/icons/
 # root files
-cp __init__.py \
+cp -v __init__.py \
    LICENSE \
    Makefile \
    pb_tool.cfg \
@@ -23,13 +23,13 @@ cp __init__.py \
    $DIR/
 # layer
 mkdir -p $DIR/layer
-cp layer/__init__.py \
+cp -v layer/__init__.py \
    layer/exceptions.py \
    layer/safecast* \
    $DIR/layer
 # reader
 mkdir -p $DIR/reader
-cp reader/__init__.py \
+cp -v reader/__init__.py \
    reader/exceptions.py \
    reader/safecast* \
    reader/logger.py \
@@ -37,12 +37,13 @@ cp reader/__init__.py \
    $DIR/reader
 # style
 mkdir -p $DIR/style
-cp style/__init__.py \
+cp -v style/__init__.py \
    style/safecast.py \
    $DIR/style
 mkdir -p $DIR/style/safecast
-cp -r style/safecast/* \
+cp -rv style/safecast/* \
    $DIR/style/safecast
 # tools
-cp -r tools $DIR/tools
+cp -rv tools $DIR/tools
 
+exit 0
