@@ -25,9 +25,6 @@ safecast_packager() {
 
     sed -i 's/PLUGIN_TYPE = PluginType.Dev/PLUGIN_TYPE = PluginType.Safecast/g' $DIR/plugin_type.py
     sed -i 's/safecast_icon_devel/safecast_icon_stable/g' $DIR/radiation_toolbox.py
-
-    # extra big fonts
-    rm -rf $DIR/help/_static/fonts
 }
 
 zip_packager() {
