@@ -6,8 +6,8 @@ DIR=../qgis-safecast-plugin
 
 ### copy files/dirs
 
-# docs
-cp -rv docs         $DIR/
+# help
+cp -rv help         $DIR/
 # i18n
 cp -rv i18n         $DIR/
 # icons
