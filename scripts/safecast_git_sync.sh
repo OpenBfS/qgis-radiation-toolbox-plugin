@@ -4,6 +4,8 @@
 
 DIR=../qgis-safecast-plugin
 
+### copy files/dirs
+
 # docs
 cp -rv docs         $DIR/
 # i18n
@@ -21,6 +23,7 @@ cp -v __init__.py \
    radiation_toolbox*.py \
    resources* \
    $DIR/
+cp metadata_safecast.txt $DIR/metadata.txt
 # layer
 mkdir -p $DIR/layer
 cp -v layer/__init__.py \
@@ -45,5 +48,11 @@ cp -rv style/safecast/* \
    $DIR/style/safecast
 # tools
 cp -rv tools $DIR/tools
+
+### modify
+sed -i 's/PLUGIN_TYPE = PluginType.Dev/PLUGIN_TYPE = PluginType.Safecast/g' \
+    $DIR/plugin_type.py
+sed -i 's/safecast_icon_devel/safecast_icon_stable/g' \
+    $DIR/radiation_toolbox.py
 
 exit 0
