@@ -15,6 +15,7 @@ cp -v icons/safecast* $DIR/icons/
 cp -v icons/tool*     $DIR/icons/
 # root files
 cp -v __init__.py \
+   .gitignore \
    LICENSE \
    Makefile \
    pb_tool.cfg \
