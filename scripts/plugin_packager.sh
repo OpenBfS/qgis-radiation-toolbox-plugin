@@ -33,7 +33,7 @@ safecast_packager() {
 zip_packager() {
     cd /tmp
     zip_file=qgis-${TYPE}-plugin.zip
-    rm -r $zip_file
+    rm -f $zip_file
     zip $zip_file qgis-${TYPE}-plugin -r
 }
 

@@ -513,12 +513,12 @@ Details: {1}</source>
 <context>
     <name>SafecastPlot</name>
     <message>
-        <location filename="../safecast_plot.py" line="85"/>
+        <location filename="../tools/plot/safecast.py" line="85"/>
         <source>Distance (km)</source>
         <translation>Расстояние (км)</translation>
     </message>
     <message>
-        <location filename="../safecast_plot.py" line="90"/>
+        <location filename="../tools/plot/safecast.py" line="90"/>
         <source>ADER (microSv/h)</source>
         <translation>ADER (микроЗв/ч)</translation>
     </message>

@@ -34,15 +34,15 @@ from qgis.utils import iface, Qgis
 
 from osgeo import ogr
 
-from .plugin_type import PLUGIN_TYPE, PLUGIN_NAME, PluginType
-from .layer.exceptions import LoadError
-from .reader.logger import ReaderLogger
-from .safecast_stats import SafecastStats
-from .layer import LayerType
-from .style import StyleError
+from plugin_type import PLUGIN_TYPE, PLUGIN_NAME, PluginType
+from layer.exceptions import LoadError
+from reader.logger import ReaderLogger
+from tools.stats.safecast import SafecastStats
+from layer import LayerType
+from style import StyleError
 
 try:
-    from .safecast_plot import SafecastPlot
+    from tools.plot.safecast import SafecastPlot
     plotMsg = None
 except ImportError as e:
     plotMsg = "Plot functionality not available. Reason: {}".format(e)
