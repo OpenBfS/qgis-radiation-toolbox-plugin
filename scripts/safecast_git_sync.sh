@@ -48,7 +48,7 @@ mkdir -p $DIR/style/safecast
 cp -rv style/safecast/* \
    $DIR/style/safecast
 # tools
-cp -rv tools $DIR/tools
+cp -rv tools $DIR/
 
 ### modify
 sed -i 's/PLUGIN_TYPE = PluginType.Dev/PLUGIN_TYPE = PluginType.Safecast/g' \
