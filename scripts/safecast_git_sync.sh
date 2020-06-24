@@ -56,4 +56,7 @@ sed -i 's/PLUGIN_TYPE = PluginType.Dev/PLUGIN_TYPE = PluginType.Safecast/g' \
 sed -i 's/safecast_icon_devel/safecast_icon_stable/g' \
     $DIR/radiation_toolbox.py
 
+### copy extra dirs
+cp -rv qwt $DIR/
+
 exit 0
