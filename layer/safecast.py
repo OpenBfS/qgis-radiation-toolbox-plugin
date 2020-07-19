@@ -505,7 +505,7 @@ class SafecastLayerHelper(object):
         speed_cum = 0
         dist_cum = 0
         self._plot = [[], []]
-        start = time.clock()
+        start = time.perf_counter()
         for feat in features:
             feat_datetime = feat.attribute("date_time")
             # fix date if invalid
@@ -616,7 +616,7 @@ class SafecastLayerHelper(object):
 
             # QgsMessageLog.logMessage(
             #     '{0}: {1} features updated in {2:.2f} sec'.format(
-            #         self._layer.name(), self._layer.featureCount(), time.clock() - start),
+            #         self._layer.name(), self._layer.featureCount(), time.perf_counter() - start),
             #     tag=PLUGIN_NAME,
             #     level=Qgis.Info
             # )

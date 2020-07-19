@@ -77,7 +77,7 @@ class LayerBase(QgsVectorLayer):
         # load items as new point features (inform user about progress)
         i = 0
         count = reader.count()
-        start = time.clock()
+        start = time.perf_counter()
         prev = None # previous feature
 
         self.startEditing()
@@ -109,7 +109,7 @@ class LayerBase(QgsVectorLayer):
             self.reload()
 
         # finish import
-        endtime = time.clock() - start
+        endtime = time.perf_counter() - start
         progress.setValue(100)
         iface.messageBar().clearWidgets()
 
