@@ -1,17 +1,17 @@
 [general]
-name=Radiation ToolBox Plugin (DEV)
-qgisMinimumVersion=3.0
-description=
-version=1.0alpha
+name=Radiation ToolBox Plugin
+qgisMinimumVersion=3.10
+description=Plugin for loading data from Safecast radiation monitoring devices
+version=2.0dev
 author=OpenGeoLabs s.r.o.
 email=info@opengeolabs.cz
 
-about=
+about=This plugin allows to easily load data from Safecast radiation monitoring devices (LOG file) like bGeigie Nano into QGIS as a new vector point layer. Developed by OpenGeoLabs s.r.o for National Radiation Protection Institute (SURO), Prague, Czech Republic (SURO).
 
-tracker=
-repository=
+tracker=https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin/-/issues
+repository=https://gitlab.com/opengeolabs/qgis-radiation-toolbox-plugin
 
-tags=vector,radiation toolbox
+tags=vector,radiation,safecast
 
 homepage=
 category=Plugins

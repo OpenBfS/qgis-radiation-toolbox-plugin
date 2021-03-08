@@ -36,7 +36,6 @@ from osgeo import ogr
 from . import LayerBase, LayerType
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from plugin_type import PLUGIN_NAME
 from style.safecast import SafecastStyle
 
 class SafecastWriterError(Exception):
@@ -617,7 +616,7 @@ class SafecastLayerHelper(object):
             # QgsMessageLog.logMessage(
             #     '{0}: {1} features updated in {2:.2f} sec'.format(
             #         self._layer.name(), self._layer.featureCount(), time.perf_counter() - start),
-            #     tag=PLUGIN_NAME,
+            #     tag="Radiation Toolbox",
             #     level=Qgis.Info
             # )
 

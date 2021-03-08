@@ -18,7 +18,6 @@ from osgeo import ogr
 from .exceptions import LoadError
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from plugin_type import PLUGIN_NAME
 from style import Style, StyleError
 
 class LayerType(Enum):
@@ -129,7 +128,7 @@ class LayerBase(QgsVectorLayer):
                     "{}: {} measurement(s) skipped (invalid {})".format(
                         self._fileName, self._errs[attr], attr
                     ),
-                    tag=PLUGIN_NAME
+                    tag="Radiation Toolbox"
                 )
         
         # inform user about successful import
