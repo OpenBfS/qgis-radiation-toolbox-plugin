@@ -31,7 +31,6 @@ from .resources import *
 
 # Import the code for the DockWidget
 from .radiation_toolbox_dockwidget import RadiationToolboxDockWidget
-from .plugin_type import PLUGIN_TYPE, PLUGIN_NAME, PluginType
 
 class RadiationToolbox:
     """QGIS Plugin Implementation."""
@@ -67,7 +66,7 @@ class RadiationToolbox:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = PLUGIN_NAME
+        self.menu = "Radiation Toolbox"
 
         #print "** INITIALIZING RadiationToolbox"
 
@@ -169,11 +168,12 @@ class RadiationToolbox:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/RadiationToolbox//icons/{}.png'.format(
-            'safecast_icon_devel' if PLUGIN_TYPE == PluginType.Safecast else 'radiation_toolbox_icon'
+            # 'safecast_icon_devel'
+            'radiation_toolbox_icon'
         )
         self.add_action(
             icon_path,
-            text=PLUGIN_NAME,
+            text="Radiation Toolbox",
             callback=self.run,
             parent=self.iface.mainWindow())
 
@@ -199,7 +199,7 @@ class RadiationToolbox:
 
         for action in self.actions:
             self.iface.removePluginMenu(
-                PLUGIN_NAME,
+                "Radiation Toolbox",
                 action)
             self.iface.removeToolBarIcon(action)
 

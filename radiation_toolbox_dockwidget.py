@@ -34,7 +34,6 @@ from qgis.utils import iface, Qgis
 
 from osgeo import ogr
 
-from .plugin_type import PLUGIN_TYPE, PLUGIN_NAME, PluginType
 from .layer.exceptions import LoadError
 from .reader.logger import ReaderLogger
 from .tools.stats.safecast import SafecastStats
@@ -47,7 +46,7 @@ try:
 except ImportError as e:
     plotMsg = "Plot functionality not available. Reason: {}".format(e)
     iface.messageBar().pushMessage(
-        PLUGIN_NAME,
+        "Radiation Toolbox",
         plotMsg,
         level=Qgis.Warning,
         duration=10
@@ -77,7 +76,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         """
         super(RadiationToolboxDockWidget, self).__init__(parent)
         self.setupUi(self)
-        self.setWindowTitle(PLUGIN_NAME)
+        self.setWindowTitle(self.tr("Radiation Toolbox"))
 
         # connect ui with functions
         self._createToolbarAndConnect()
@@ -90,7 +89,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.actionUpdateStatsPlot.triggered.connect(self.onUpdateStatsPlot)
 
         # settings (must be called before _initStyles()
-        self._settings = QSettings("OpenGeoLabs", PLUGIN_NAME)
+        self._settings = QSettings("OpenGeoLabs", "Radiation Toolbox")
         # load settings
         self._loadSettings()
 
@@ -104,12 +103,9 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self._layers = {}
 
         # collect supported file extensions
-        if PLUGIN_TYPE == PluginType.Dev:
-            self._supported_ext = ("log", "ers", "pei")
-        elif PLUGIN_TYPE == PluginType.RT:
-            self._supported_ext = ("ers", "pei")
-        else:
-            self._supported_ext = ("log")
+        self._supported_ext = ["log"]
+        if self.addFrmtCheckBox.isChecked():
+            self._supported_ext += ["ers", "pei"]
 
     def _createToolbarAndConnect(self):
         """Create toolbar and connect tools."""
@@ -140,6 +136,7 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         self.styleButton.clicked.connect(self.onStyle)
         self.plotStyleCombo.currentIndexChanged.connect(self.onPlotStyle)
         self.storageCombo.currentIndexChanged.connect(self.onStorageFormat)
+        self.addFrmtCheckBox.stateChanged.connect(self.onAdditionalFormats)
         self.onlineMapsButton.clicked.connect(self.onAddOnlineMap)
 
     def _loadSettings(self):
@@ -150,13 +147,16 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         # plot style
         sender = '{}-lastCurrentIndex'.format(self.plotStyleCombo.objectName())
         self.plotStyleCombo.setCurrentIndex(int(self._settings.value(sender, 0)))
+        # additional formats
+        sender = '{}-lastChecked'.format(self.addFrmtCheckBox.objectName())
+        self.addFrmtCheckBox.setChecked(int(self._settings.value(sender, 0)))
 
     def _lastUsedFileExt(self, getSender=False):
         """Get last used file extension"""
         senderExt = '{}-lastUserFileExt'.format(self.sender().objectName())
-        lastExt = self._settings.value(
-            senderExt, "log" if PLUGIN_TYPE != PluginType.RT else "ers"
-        ).lower()
+        lastExt = self._settings.value(senderExt, "log").lower()
+        if lastExt not in self._supported_ext:
+            lastExt = "log"
 
         if getSender:
             return senderExt, lastExt
@@ -606,6 +606,13 @@ class RadiationToolboxDockWidget(QtWidgets.QDockWidget, FORM_CLASS):
         sender = '{}-lastCurrentIndex'.format(self.sender().objectName())
         self._settings.setValue(sender, idx)
 
+    def onAdditionalFormats(self, checked):
+        """Additional formats enabled/disabled.
+        """
+        # remember current settings
+        sender = '{}-lastChecked'.format(self.sender().objectName())
+        self._settings.setValue(sender, checked)
+        
     def onAddOnlineMap(self):
         """Add online basemap to layer tree
         """

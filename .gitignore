@@ -4,3 +4,4 @@ help/build
 __pycache__/
 qgis-safecast-plugin.zip
 qwt/
+zip_build/
